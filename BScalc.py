@@ -7,7 +7,7 @@ AllBldngsNames = ('hall', 'storage', 'houses', 'sawmill', 'mine',
 resources = {'gold' : 0, 'wood' : 0, 'stone' : 0, 'food' : 0, 'time' : None}
 
 buildings = {'hall' : {'lvl' : 0}, 'storage' : {'lvl' : 0, 'ppl' : 0}, 'houses' : {'lvl' : 0, 'ppl' : 0},
-	'sawmill' : {'lvl' : 4, 'ppl' : 0}, 'mine' : {'lvl' : 0, 'ppl' : 0}, 'farm' : {'lvl' : 0, 'ppl' : 0}}
+	'sawmill' : {'lvl' : 0, 'ppl' : 0}, 'mine' : {'lvl' : 0, 'ppl' : 0}, 'farm' : {'lvl' : 0, 'ppl' : 0}}
 
 war_bldngs = {'barracks' : {'lvl' : 0, 'ppl' : 0}, 'wall' : {'lvl' : 0, 'ppl' : 0}, 'trebuchet'  : {'lvl' : 0, 'ppl' : 0}}
 
@@ -20,8 +20,10 @@ que = queue.Queue()
 #Проверка что ресурсов хватает на апгрейд
 def isResEnough(building):
     global resources
+
     cost = getUpgrCost(building)
     overGold = resources['gold'] - cost['gold']
+
     #Мы не продаем ресурсы - а только покупаем
     if overGold >= 0:
         needWood = cost['wood'] - resources['wood']
@@ -82,12 +84,12 @@ def getMaxPpl(building):
 
 #окупаемость
 def getROI(building):
+    #добавить вычисление ROI для одновременного аппа нескольких зданий
     global buildings
     incomUp = getIncUp(building)
     storLvlsUp = getStorReq(building) - buildings['storage']['lvl']
     #Для постройки необходимо апнуть склад на storLvlsUp уровней
-    if getStorReq(building) > buildings['storage']['lvl']:
-        storLvlsUp = getStorReq(building) - buildings['storage']['lvl']
+    if storLvlsUp > 0:
         totalUpgrCost = getUpgrCost(building)['total'] + getUpgrCost('storage', stotLvlsUp)['total']
     #Ап склада не требуется
     else: totalUpgrCost = getUpgrCost(building)['total']
@@ -111,6 +113,14 @@ def getIncUp(building):
     elif building == 'sawmill' or building == 'mine':
         if buildings[building]['lvl'] < buildings['storage']['lvl']: return 20
         else: return 0
+    elif building == 'storage':
+        incomUp = 0
+        if buildings['storage']['lvl'] < buildings['farm']['lvl']:
+            if buildings['storage']['lvl'] < buildings['houses']['lvl']: incomUp += 20
+            else: incomUp += 5
+        if buildings['storage']['lvl'] < buildings['sawmill']['lvl']: incomUp += 20
+        if buildings['storage']['lvl'] < buildings['mine']['lvl']: incomUp += 20
+        return incomUp
     else: return 0
 
 #Расчет дохода по зданию
@@ -134,13 +144,87 @@ def getTotalIncom():
 
 #Следующее здание для апгрейда
 def getNextUpgrBld():
-    #заглушка для теста
-    return 'storage'
-    pass
+    global buildings
 
+    #Первые три постройки Дома, Склад, Ферма
+    if buildings['houses']['lvl'] == 0: return 'houses'
+    if buildings['storage']['lvl'] == 0: return 'storage'
+    if buildings['farm']['lvl'] == 0: return 'farm'
+
+    #Дальше считаем по окупаемости
+
+    #Дом+Ферма
+    incomUp = 10 + buildings['hall']['lvl']*2
+    #Если склада не хватает, вычитаем из дохода расходы на еду
+    if buildings['storage']['lvl'] <= buildings['farm']['lvl']: incomUp -= 20
+    if incomUp <= 0: hausfarm = math.inf
+    else: hausfarm = (getUpgrCost('houses')['total'] + getUpgrCost('farm')['total'])/incomUp
+
+    #Дом+Ратуша
+    storLvlUp = max(getStorReq('houses'),getStorReq('hall')) - buildings['storage']['lvl']
+    incomUp = getIncUp('houses') + (buildings['houses']['lvl'] + 1)*2
+    upgrCost = getUpgrCost('houses')['total']+getUpgrCost('hall')['total']
+    #Если необходим ап складов, то считаем
+    if storLvlUp > 0: upgrCost += getUpgrCost('storage',storLvlUp)['total']
+    if incomUp <= 0: haushall = math.inf
+    else: haushall = upgrCost/incomUp
+            
+    #Склад+Лесопилка+Шахта
+    skld1 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'])/40
+    #Склад+Лесопилка+Шахта+Ферма
+    if buildings['farm']['lvl'] + 1 >=  buildings['houses']['lvl']:
+        skld2 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'] + getUpgrCost('farm')['total'])/45
+    else:
+        skld2 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'] + getUpgrCost('farm')['total'])/60
+    #Склад+Дома+Ферма
+    skld3 = (getUpgrCost('storage')['total'] + getUpgrCost('houses')['total'] + getUpgrCost('farm')['total'])/(10 + buildings['hall']['lvl']*2)
+
+    storROI = min(skld1, skld2, skld3, getROI('storage')) #минимум из всех вариантов со складом
+    hallROI = getROI('hall')
+    hausROI = getROI('houses')
+    farmROI = getROI('farm')
+    sawmROI = getROI('sawmill')
+    mineROI = getROI('mine')
+
+    minROI = min(storROI, hallROI, hausROI, farmROI, sawmROI, mineROI, haushall, hausfarm)
+
+    #Для Дома+Ратуша выбираем то что выгодней
+    if minROI == haushall:
+        if hausROI == min(hausROI, hallROI): hausROI = minROI
+        else: hallROI = minROI
+    #Или для Дома+Ферма выбираем то что выгодней
+    elif minROI == hausfarm:
+        if hausROI == min(hausROI, farmROI): hausROI = minROI
+        else: farmROI = minROI
+
+
+    if minROI == storROI: return 'storage'
+    elif minROI == hallROI:
+        if isStorEnough('hall'): return 'hall'
+        else: return 'storage'
+    elif minROI == hausROI:
+        if isStorEnough('houses'): return 'houses'
+        else: return 'storage'
+    elif minROI == farmROI:
+        if isStorEnough('farm'): return 'farm'
+        else: return 'storage'
+    elif minROI == sawmROI:
+        if isStorEnough('sawmill'): return 'sawmill'
+        else: return 'storage'
+    elif minROI == mineROI:
+        if isStorEnough('mine'): return 'mine'
+        else: return 'storage'
+    
+    #Что-то пошло не так и мы оказались здесь
+    return None
+    
 #Проапгрейдить здание
 def doUpgrade(building=getNextUpgrBld()):
     global que
+
+    #TODO: Если ресурсы обновлялись больше минуты назад, делаем "наверх", ставим флаг doUpgrade
+    # и делаем апгрейд в парсере сообщений при обновлении
+
     if isResEnough(building):
         if isResBuyingNeed(building):
             doBuyReses(building,True)
@@ -179,20 +263,27 @@ def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
     que.put('Наверх')
     que.put('Торговля')
     que.put('Купить')
+
     que.put('Дерево')
     que.put(cost['wood'] - resources['wood'])
     #В предположении что закупка состится успешно:
     resources['wood'] = cost['wood']
+
     que.put('Назад')
     que.put('Камень')
     que.put(cost['stone'] - resources['stone'])
     #В предположении что закупка состится успешно:
     resources['stone'] = cost['stone']
+
     #И делаем апгрейд если надо
     if doUpgr: doUpgrade(building)
+    #TODO: устанавливаем флаг doUpgrade и делаем апгрейд в парсере сообщений
+    #В таком случае возможно срабатывание раньше времени и повторная закупка ресурсов
+    #Вариант: постановка в очередь маркера окончания закупки
 
 #парсер сообщений от бота
 def msgParser(text):
     global resources
     global buildings
     pass
+
