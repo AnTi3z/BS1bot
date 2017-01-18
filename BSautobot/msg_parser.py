@@ -1,4 +1,4 @@
-from globals import *
+from .globals import *
 import re
 import time
 

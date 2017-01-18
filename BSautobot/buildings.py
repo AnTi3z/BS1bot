@@ -1,4 +1,4 @@
-from globals import * 
+from .globals import *
 import math
 
 
@@ -232,6 +232,7 @@ def doUpgrade(building=getNextUpgrBld()):
                 elif building == 'wall':
                     que.put('Стена')
             que.put('Улучшить')
+            doSendPpl(building)
     else: print('ресурсов на постройку недостаточно')
 
 #Закупить ресурсы
@@ -258,3 +259,9 @@ def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
     #TODO: устанавливаем флаг doUpgrade и делаем апгрейд в парсере сообщений
     #В таком случае возможно срабатывание раньше времени и повторная закупка ресурсов
     #Вариант: постановка в очередь маркера окончания закупки
+
+#Отправить в здание людей
+def soSendPpl(building):
+    #Проверить количество нехватающих людей в здании
+    #Отправить максимум из тех что есть
+    pass

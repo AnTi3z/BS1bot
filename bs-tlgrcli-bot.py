@@ -2,7 +2,7 @@ import tgl
 import pprint
 import time
 from functools import partial
-import BSautobot.main
+import BSautobot
 
 our_id = 0
 pp = pprint.PrettyPrinter(indent=4)
@@ -43,12 +43,13 @@ def on_msg_receive(msg):
       return
 
     if msg.out: # комманды отправляемые в чат
-      #парсинг пользовательских команд if msg.text.startswith("!"): command_parser(msg.txt)
+      #парсинг пользовательских команд
+        if msg.text.startswith("!"):
+            BSautobot.msgSent(msg.text)
 
     elif msg.dest.id == our_id: # сообщение нам
-      peer = msg.src
-      if peer.id == 252148344: # сообщение от Bastion Siege
-        #парсинг bs_msg_parser(msg.txt)
+      if msg.src.id == 252148344: # сообщение от Bastion Siege
+        BSautobot.msgRecvd(msg.text)
 
     else: # chatroom
       peer = msg.dest
