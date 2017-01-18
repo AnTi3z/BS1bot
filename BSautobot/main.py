@@ -5,7 +5,10 @@ import time
 import tgl
 
 que_stoped = True
-BSpeer = tgl.Peer(type=tgl.PEER_USER,id=252148344)
+
+def setBSpeer(peer):
+    global BSpeer
+    BSpeer = peer
 
 def msgRecvd(text):
     global que_stoped, BSpeer

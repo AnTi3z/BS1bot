@@ -44,11 +44,13 @@ def on_msg_receive(msg):
 
     if msg.out: # комманды отправляемые в чат
       #парсинг пользовательских команд
+        BSautobot.setBSpeer(tgl.Peer(type=tgl.PEER_USER,id=252148344))
         if msg.text.startswith("!"):
             BSautobot.msgSent(msg.text)
 
     elif msg.dest.id == our_id: # сообщение нам
       if msg.src.id == 252148344: # сообщение от Bastion Siege
+        BSautobot.setBSpeer(tgl.Peer(type=tgl.PEER_USER,id=252148344))
         BSautobot.msgRecvd(msg.text)
 
     else: # chatroom

@@ -243,16 +243,18 @@ def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
     que.put('Торговля')
     que.put('Купить')
 
-    que.put('Дерево')
-    que.put(cost['wood'] - resources['wood'])
-    #В предположении что закупка состится успешно:
-    resources['wood'] = cost['wood']
+    if cost['wood'] > resources['wood']:
+        que.put('Дерево')
+        que.put(str(cost['wood'] - resources['wood']))
+        #В предположении что закупка состится успешно:
+        resources['wood'] = cost['wood']
 
-    que.put('Назад')
-    que.put('Камень')
-    que.put(cost['stone'] - resources['stone'])
-    #В предположении что закупка состится успешно:
-    resources['stone'] = cost['stone']
+    if cost['stone'] > resources['stone']:
+        que.put('Назад')
+        que.put('Камень')
+        que.put(str(cost['stone'] - resources['stone']))
+        #В предположении что закупка состится успешно:
+        resources['stone'] = cost['stone']
 
     #И делаем апгрейд если надо
     if doUpgr: doUpgrade(building)
@@ -261,7 +263,7 @@ def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
     #Вариант: постановка в очередь маркера окончания закупки
 
 #Отправить в здание людей
-def soSendPpl(building):
+def doSendPpl(building):
     #Проверить количество нехватающих людей в здании
     #Отправить максимум из тех что есть
     pass
