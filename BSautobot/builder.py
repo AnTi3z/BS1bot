@@ -44,13 +44,13 @@ def getUpgrCost(building, lvlsUp=1):
     dstLvl = srcLvl + lvlsUp
     #Определяем два члена полинома, в зависимости от текущего(Poly2) и целевого уровней(Poly1)
     #Sn, Sm - частичныя суммы ряда от 0 до n и от 0 до m. Тогда Snm = Sm - Sn - сумма ряда от n до m
-    Sm = dstLvl * (dstLvl-1) * ((2*dstLvl+8)/6 + 2/dstLvl)
+    Sm = round(dstLvl * (dstLvl-1) * ((2*dstLvl+8)/6 + 2/dstLvl))
     #Если текущий уровень - 0, то -Sn/2 должен обращаться в 1, тогда Sn = -2
     if srcLvl == 0: Sn = -2
-    else: Sn = srcLvl * (srcLvl-1) * ((2*srcLvl+8)/6 + 2/srcLvl)
-    gold = int(costCoef[building][0] * (Sm - Sn) / 2)
-    wood = int(costCoef[building][1] * (Sm - Sn) / 2)
-    stone = int(costCoef[building][2] * (Sm - Sn) / 2)
+    else: Sn = round(srcLvl * (srcLvl-1) * ((2*srcLvl+8)/6 + 2/srcLvl))
+    gold = round(costCoef[building][0] * (Sm - Sn) / 2)
+    wood = round(costCoef[building][1] * (Sm - Sn) / 2)
+    stone = round(costCoef[building][2] * (Sm - Sn) / 2)
     return {'gold' : gold, 'wood' : wood, 'stone' : stone, 'total' : gold + wood * 2 + stone * 2}
 
 
@@ -70,7 +70,7 @@ def getROI(building):
     storLvlsUp = getStorReq(building) - buildings['storage']['lvl']
     #Для постройки необходимо апнуть склад на storLvlsUp уровней
     if storLvlsUp > 0:
-        totalUpgrCost = getUpgrCost(building)['total'] + getUpgrCost('storage', stotLvlsUp)['total']
+        totalUpgrCost = getUpgrCost(building)['total'] + getUpgrCost('storage', storLvlsUp)['total']
     #Ап склада не требуется
     else: totalUpgrCost = getUpgrCost(building)['total']
     if incomUp > 0: return totalUpgrCost/incomUp
