@@ -135,11 +135,15 @@ def getNextUpgrBld():
     #Дальше считаем по окупаемости
 
     #Дом+Ферма
+    storLvlUp = max(getStorReq('houses'),getStorReq('farm')) - buildings['storage']['lvl']
     incomUp = 10 + buildings['hall']['lvl']*2
     #Если склада не хватает, вычитаем из дохода расходы на еду
     if buildings['storage']['lvl'] <= buildings['farm']['lvl']: incomUp -= 20
+    upgrCost = getUpgrCost('houses')['total'] + getUpgrCost('farm')['total']
+    #Если необходим ап складов, то считаем
+    if storLvlUp > 0: upgrCost += getUpgrCost('storage',storLvlUp)['total']
     if incomUp <= 0: hausfarm = math.inf
-    else: hausfarm = (getUpgrCost('houses')['total'] + getUpgrCost('farm')['total'])/incomUp
+    else: hausfarm = upgrCost/incomUp
 
     #Дом+Ратуша
     storLvlUp = max(getStorReq('houses'),getStorReq('hall')) - buildings['storage']['lvl']
@@ -200,9 +204,10 @@ def getNextUpgrBld():
 
 
 #Проапгрейдить здание
-def doUpgrade(building=getNextUpgrBld()):
+def doUpgrade(building=False):
     #TODO: Если ресурсы обновлялись больше минуты назад, делаем "наверх", ставим флаг doUpgrade
     # и делаем апгрейд в парсере сообщений при обновлении
+    if not building: building = getNextUpgrBld()
 
     if isResEnough(building):
         if isResBuyingNeed(building):

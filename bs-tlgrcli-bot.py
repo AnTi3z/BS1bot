@@ -13,6 +13,7 @@ def on_binlog_replay_end():
     global binlog_done
     binlog_done = True;
 
+
 def on_get_difference_end():
     pass
 
@@ -44,13 +45,12 @@ def on_msg_receive(msg):
 
     if msg.out: # комманды отправляемые в чат
       #парсинг пользовательских команд
-        BSautobot.setBSpeer(tgl.Peer(type=tgl.PEER_USER,id=252148344))
         if msg.text.startswith("!"):
-            BSautobot.msgSent(msg.text)
+            BSautobot.cmdSent(msg.text)
 
     elif msg.dest.id == our_id: # сообщение нам
       if msg.src.id == 252148344: # сообщение от Bastion Siege
-        BSautobot.setBSpeer(tgl.Peer(type=tgl.PEER_USER,id=252148344))
+        BSautobot.setSendMsg(tgl.Peer(type=tgl.PEER_USER,id=252148344).send_msg)
         BSautobot.msgRecvd(msg.text)
 
     else: # chatroom
