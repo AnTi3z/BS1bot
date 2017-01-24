@@ -1,4 +1,4 @@
-from .globals import *
+from .globalobjs import *
 from . import builder
 
 

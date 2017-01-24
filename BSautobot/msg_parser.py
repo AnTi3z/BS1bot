@@ -1,4 +1,4 @@
-from .globals import *
+from .globalobjs import *
 import re
 import time
 

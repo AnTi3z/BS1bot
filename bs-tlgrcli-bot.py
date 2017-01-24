@@ -46,7 +46,8 @@ def on_msg_receive(msg):
     if msg.out: # комманды отправляемые в чат
       #парсинг пользовательских команд
         if msg.text.startswith("!"):
-            BSautobot.cmdSent(msg.text)
+            BSautobot.setSendInfo(msg.dest.send_msg)
+            BSautobot.cmdRecvd(msg.text)
 
     elif msg.dest.id == our_id: # сообщение нам
       if msg.src.id == 252148344: # сообщение от Bastion Siege

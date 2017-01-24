@@ -15,3 +15,7 @@ costCoef = {'hall' : (500, 200, 200), 'storage' : (200, 100, 100), 'houses' : (2
 	'barracks' : (200, 100, 100), 'wall' : (5000, 500, 1500), 'trebuchet'  : (8000, 1000, 300)}
 
 que = queue.Queue()
+SendMsg_cb = None
+SendInfo_cb = None
+
+debug_on = True

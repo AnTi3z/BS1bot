@@ -1,4 +1,5 @@
-from .globals import *
+from . import globalobjs
+from .globalobjs import *
 import math
 
 
@@ -238,7 +239,8 @@ def doUpgrade(building=False):
                     que.put('Стена')
             que.put('Улучшить')
             doSendPpl(building)
-    else: print('ресурсов на постройку недостаточно')
+    else:
+        globalobjs.SendInfo_cb('ресурсов на постройку %s недостаточно' % building)
 
 #Закупить ресурсы
 def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
