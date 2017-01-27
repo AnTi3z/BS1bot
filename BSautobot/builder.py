@@ -1,6 +1,8 @@
 from . import globalobjs
 from .globalobjs import *
 import math
+import time
+from . import queues
 
 
 #Проверка что ресурсов хватает на апгрейд
@@ -210,43 +212,55 @@ def doUpgrade(building=False):
     # и делаем апгрейд в парсере сообщений при обновлении
     if not building: building = getNextUpgrBld()
 
+    if resources['time'] < int(time.time()/60):
+        queues.msgQueAdd('Наверх')
+        #Запустить таймер на 5 секунд или time.sleep(5)
+        queues.cmdQueAdd(('build', building))
+        return
+
     if isResEnough(building):
         if isResBuyingNeed(building):
             doBuyReses(building,True)
+            #doBuyReses(cost['wood'],cost['stone'],0)
+            #queues.cmdQueAdd('build', building)
             return
         else:
-            que.put('Наверх')
+            #queues.msgQueAdd('Наверх')
+            #....
+            queues.msgQueAdd('Наверх')
             if building == 'Требушет':
-                que.put('Мастерская')
+                queues.msgQueAdd('Мастерская')
             else:
-                que.put('Постройки')
-            que.put(building)
-            que.put('Улучшить')
+                queues.msgQueAdd('Постройки')
+            queues.msgQueAdd(building)
+            queues.msgQueAdd('Улучшить')
             doSendPpl(building)
+            queues.msgQueAdd('Наверх')
     else:
         totalGold = getUpgrCost(building)['total'] - resources['wood']*2 - resources['stone']*2
         needGold = totalGold - resources['gold']
-        time = math.ceil(needGold / getTotalIncom())
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНеобходимо %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, time))
+        lefttime = math.ceil(needGold / getTotalIncom())
+        #Запустить таймер на time+1
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНеобходимо %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
 
 #Закупить ресурсы
 def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
     #Закупаем ресурсы
     cost = getUpgrCost(building)
-    que.put('Наверх')
-    que.put('Торговля')
-    que.put('Купить')
+    queues.msgQueAdd('Наверх')
+    queues.msgQueAdd('Торговля')
+    queues.msgQueAdd('Купить')
 
     if cost['wood'] > resources['wood']:
-        que.put('Дерево')
-        que.put(str(cost['wood'] - resources['wood']))
+        queues.msgQueAdd('Дерево')
+        queues.msgQueAdd(str(cost['wood'] - resources['wood']))
         #В предположении что закупка состится успешно:
         resources['wood'] = cost['wood']
 
     if cost['stone'] > resources['stone']:
-        que.put('Назад')
-        que.put('Камень')
-        que.put(str(cost['stone'] - resources['stone']))
+        queues.msgQueAdd('Назад')
+        queues.msgQueAdd('Камень')
+        queues.msgQueAdd(str(cost['stone'] - resources['stone']))
         #В предположении что закупка состится успешно:
         resources['stone'] = cost['stone']
 
