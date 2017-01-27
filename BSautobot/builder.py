@@ -27,7 +27,7 @@ def isResBuyingNeed(building):
 
 #Проверка уровня склада на возможность апгрейда
 def isStorEnough(building):
-    if buildings['storage']['lvl'] >= getStorReq(building): return True
+    if buildings['Склад']['lvl'] >= getStorReq(building): return True
     else: return False
 
 
@@ -57,10 +57,10 @@ def getUpgrCost(building, lvlsUp=1):
 
 #Максимальное количество людей в строении
 def getMaxPpl(building):
-    if building == 'storage' or building == 'sawmill' or building == 'mine' or building == 'farm' or building == 'wall': return buildings[building]['lvl'] * 10
-    elif building == 'houses': return buildings[building]['lvl'] * 20
-    elif building == 'barracks': return buildings[building]['lvl'] * 40
-    elif building == 'trebuchet': return math.ceil(buildings[building]['lvl'] / 5)
+    if building == 'Склад' or building == 'Лесопилка' or building == 'Шахта' or building == 'Ферма' or building == 'Стена': return buildings[building]['lvl'] * 10
+    elif building == 'Дома': return buildings[building]['lvl'] * 20
+    elif building == 'Казармы': return buildings[building]['lvl'] * 40
+    elif building == 'Требушет': return math.ceil(buildings[building]['lvl'] / 5)
     else: return None
 
 
@@ -68,10 +68,10 @@ def getMaxPpl(building):
 def getROI(building):
     #добавить вычисление ROI для одновременного аппа нескольких зданий
     incomUp = getIncUp(building)
-    storLvlsUp = getStorReq(building) - buildings['storage']['lvl']
+    storLvlsUp = getStorReq(building) - buildings['Склад']['lvl']
     #Для постройки необходимо апнуть склад на storLvlsUp уровней
     if storLvlsUp > 0:
-        totalUpgrCost = getUpgrCost(building)['total'] + getUpgrCost('storage', storLvlsUp)['total']
+        totalUpgrCost = getUpgrCost(building)['total'] + getUpgrCost('Склад', storLvlsUp)['total']
     #Ап склада не требуется
     else: totalUpgrCost = getUpgrCost(building)['total']
     if incomUp > 0: return totalUpgrCost/incomUp
@@ -81,26 +81,26 @@ def getROI(building):
 
 #прирост дохода при апгрейде
 def getIncUp(building):
-    if building == 'hall': return buildings['houses']['lvl'] * 2
-    elif building == 'houses':
-        if min(buildings['farm']['lvl'],buildings['storage']['lvl']) > buildings['houses']['lvl']: consumptFarm = 5
+    if building == 'Ратуша': return buildings['Дома']['lvl'] * 2
+    elif building == 'Дома':
+        if min(buildings['Ферма']['lvl'],buildings['Склад']['lvl']) > buildings['Дома']['lvl']: consumptFarm = 5
         else: consumptFarm = 20
-        return 10 + buildings['hall']['lvl'] * 2 - consumptFarm
-    elif building == 'farm':
-        if buildings['farm']['lvl'] >= buildings['storage']['lvl']: return 0
+        return 10 + buildings['Ратуша']['lvl'] * 2 - consumptFarm
+    elif building == 'Ферма':
+        if buildings['Ферма']['lvl'] >= buildings['Склад']['lvl']: return 0
         else:
-            if buildings['farm']['lvl'] >= buildings['houses']['lvl']: return 5
+            if buildings['Ферма']['lvl'] >= buildings['Дома']['lvl']: return 5
             else: return 20
-    elif building == 'sawmill' or building == 'mine':
-        if buildings[building]['lvl'] < buildings['storage']['lvl']: return 20
+    elif building == 'Лесопилка' or building == 'Шахта':
+        if buildings[building]['lvl'] < buildings['Склад']['lvl']: return 20
         else: return 0
-    elif building == 'storage':
+    elif building == 'Склад':
         incomUp = 0
-        if buildings['storage']['lvl'] < buildings['farm']['lvl']:
-            if buildings['storage']['lvl'] < buildings['houses']['lvl']: incomUp += 20
+        if buildings['Склад']['lvl'] < buildings['Ферма']['lvl']:
+            if buildings['Склад']['lvl'] < buildings['Дома']['lvl']: incomUp += 20
             else: incomUp += 5
-        if buildings['storage']['lvl'] < buildings['sawmill']['lvl']: incomUp += 20
-        if buildings['storage']['lvl'] < buildings['mine']['lvl']: incomUp += 20
+        if buildings['Склад']['lvl'] < buildings['Лесопилка']['lvl']: incomUp += 20
+        if buildings['Склад']['lvl'] < buildings['Шахта']['lvl']: incomUp += 20
         return incomUp
     else: return 0
 
@@ -108,69 +108,69 @@ def getIncUp(building):
 #Расчет дохода по зданию
 def getIncom(building):
     #Дома и ратуша создают общий доход
-    if building == 'houses' or building == 'hall':
-        return buildings['houses']['lvl'] * 10 + buildings['houses']['lvl'] * buildings['hall']['lvl'] * 2
-    elif building == 'farm':
-        overFarm = min(buildings['farm']['lvl'],buildings['storage']['lvl']) - buildings['houses']['lvl']
+    if building == 'Дома' or building == 'Ратуша':
+        return buildings['Дома']['lvl'] * 10 + buildings['Дома']['lvl'] * buildings['Ратуша']['lvl'] * 2
+    elif building == 'Ферма':
+        overFarm = min(buildings['Ферма']['lvl'],buildings['Склад']['lvl']) - buildings['Дома']['lvl']
         #Ферма производит избыток еды
         if overFarm > 0: return overFarm * 5
         #Производство еды в дефиците
         else: return overFarm * 20
-    elif building == 'sawmill' or building == 'mine':
-        return min(buildings[building]['lvl'],buildings['storage']['lvl']) * 20
+    elif building == 'Лесопилка' or building == 'Шахта':
+        return min(buildings[building]['lvl'],buildings['Склад']['lvl']) * 20
     else: return 0
 
 
 #Расчет общего дохода
 def getTotalIncom():
-    return getIncom('hall') + getIncom('farm') + getIncom('sawmill') + getIncom('mine')
+    return getIncom('Ратуша') + getIncom('Ферма') + getIncom('Лесопилка') + getIncom('Шахта')
 
 
 #Следующее здание для апгрейда
 def getNextUpgrBld():
     #Первые три постройки Дома, Склад, Ферма
-    if buildings['houses']['lvl'] == 0: return 'houses'
-    if buildings['storage']['lvl'] == 0: return 'storage'
-    if buildings['farm']['lvl'] == 0: return 'farm'
+    if buildings['Дома']['lvl'] == 0: return 'Дома'
+    if buildings['Склад']['lvl'] == 0: return 'Склад'
+    if buildings['Ферма']['lvl'] == 0: return 'Ферма'
 
     #Дальше считаем по окупаемости
 
     #Дом+Ферма
-    storLvlUp = max(getStorReq('houses'),getStorReq('farm')) - buildings['storage']['lvl']
-    incomUp = 10 + buildings['hall']['lvl']*2
+    storLvlUp = max(getStorReq('Дома'),getStorReq('Ферма')) - buildings['Склад']['lvl']
+    incomUp = 10 + buildings['Ратуша']['lvl']*2
     #Если склада не хватает, вычитаем из дохода расходы на еду
-    if buildings['storage']['lvl'] <= buildings['farm']['lvl']: incomUp -= 20
-    upgrCost = getUpgrCost('houses')['total'] + getUpgrCost('farm')['total']
+    if buildings['Склад']['lvl'] <= buildings['Ферма']['lvl']: incomUp -= 20
+    upgrCost = getUpgrCost('Дома')['total'] + getUpgrCost('Ферма')['total']
     #Если необходим ап складов, то считаем
-    if storLvlUp > 0: upgrCost += getUpgrCost('storage',storLvlUp)['total']
+    if storLvlUp > 0: upgrCost += getUpgrCost('Склад',storLvlUp)['total']
     if incomUp <= 0: hausfarm = math.inf
     else: hausfarm = upgrCost/incomUp
 
     #Дом+Ратуша
-    storLvlUp = max(getStorReq('houses'),getStorReq('hall')) - buildings['storage']['lvl']
-    incomUp = getIncUp('houses') + (buildings['houses']['lvl'] + 1)*2
-    upgrCost = getUpgrCost('houses')['total']+getUpgrCost('hall')['total']
+    storLvlUp = max(getStorReq('Дома'),getStorReq('Ратуша')) - buildings['Склад']['lvl']
+    incomUp = getIncUp('Дома') + (buildings['Дома']['lvl'] + 1)*2
+    upgrCost = getUpgrCost('Дома')['total']+getUpgrCost('Ратуша')['total']
     #Если необходим ап складов, то считаем
-    if storLvlUp > 0: upgrCost += getUpgrCost('storage',storLvlUp)['total']
+    if storLvlUp > 0: upgrCost += getUpgrCost('Склад',storLvlUp)['total']
     if incomUp <= 0: haushall = math.inf
     else: haushall = upgrCost/incomUp
 
     #Склад+Лесопилка+Шахта
-    skld1 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'])/40
+    skld1 = (getUpgrCost('Склад')['total'] + getUpgrCost('Лесопилка')['total'] + getUpgrCost('Шахта')['total'])/40
     #Склад+Лесопилка+Шахта+Ферма
-    if buildings['farm']['lvl'] + 1 >=  buildings['houses']['lvl']:
-        skld2 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'] + getUpgrCost('farm')['total'])/45
+    if buildings['Ферма']['lvl'] + 1 >=  buildings['Дома']['lvl']:
+        skld2 = (getUpgrCost('Склад')['total'] + getUpgrCost('Лесопилка')['total'] + getUpgrCost('Шахта')['total'] + getUpgrCost('Ферма')['total'])/45
     else:
-        skld2 = (getUpgrCost('storage')['total'] + getUpgrCost('sawmill')['total'] + getUpgrCost('mine')['total'] + getUpgrCost('farm')['total'])/60
+        skld2 = (getUpgrCost('Склад')['total'] + getUpgrCost('Лесопилка')['total'] + getUpgrCost('Шахта')['total'] + getUpgrCost('Ферма')['total'])/60
     #Склад+Дома+Ферма
-    skld3 = (getUpgrCost('storage')['total'] + getUpgrCost('houses')['total'] + getUpgrCost('farm')['total'])/(10 + buildings['hall']['lvl']*2)
+    skld3 = (getUpgrCost('Склад')['total'] + getUpgrCost('Дома')['total'] + getUpgrCost('Ферма')['total'])/(10 + buildings['Ратуша']['lvl']*2)
 
-    storROI = min(skld1, skld2, skld3, getROI('storage')) #минимум из всех вариантов со складом
-    hallROI = getROI('hall')
-    hausROI = getROI('houses')
-    farmROI = getROI('farm')
-    sawmROI = getROI('sawmill')
-    mineROI = getROI('mine')
+    storROI = min(skld1, skld2, skld3, getROI('Склад')) #минимум из всех вариантов со складом
+    hallROI = getROI('Ратуша')
+    hausROI = getROI('Дома')
+    farmROI = getROI('Ферма')
+    sawmROI = getROI('Лесопилка')
+    mineROI = getROI('Шахта')
 
     minROI = min(storROI, hallROI, hausROI, farmROI, sawmROI, mineROI, haushall, hausfarm)
 
@@ -183,22 +183,22 @@ def getNextUpgrBld():
         if hausROI == min(hausROI, farmROI): hausROI = minROI
         else: farmROI = minROI
 
-    if minROI == storROI: return 'storage'
+    if minROI == storROI: return 'Склад'
     elif minROI == hallROI:
-        if isStorEnough('hall'): return 'hall'
-        else: return 'storage'
+        if isStorEnough('Ратуша'): return 'Ратуша'
+        else: return 'Склад'
     elif minROI == hausROI:
-        if isStorEnough('houses'): return 'houses'
-        else: return 'storage'
+        if isStorEnough('Дома'): return 'Дома'
+        else: return 'Склад'
     elif minROI == farmROI:
-        if isStorEnough('farm'): return 'farm'
-        else: return 'storage'
+        if isStorEnough('Ферма'): return 'Ферма'
+        else: return 'Склад'
     elif minROI == sawmROI:
-        if isStorEnough('sawmill'): return 'sawmill'
-        else: return 'storage'
+        if isStorEnough('Лесопилка'): return 'Лесопилка'
+        else: return 'Склад'
     elif minROI == mineROI:
-        if isStorEnough('mine'): return 'mine'
-        else: return 'storage'
+        if isStorEnough('Шахта'): return 'Шахта'
+        else: return 'Склад'
 
     #Что-то пошло не так и мы оказались здесь
     return None
@@ -216,31 +216,18 @@ def doUpgrade(building=False):
             return
         else:
             que.put('Наверх')
-            if building == 'trebuchet':
+            if building == 'Требушет':
                 que.put('Мастерская')
-                que.put('Требушет')
             else:
                 que.put('Постройки')
-                if building == 'storage':
-                    que.put('Склад')
-                elif building == 'hall':
-                    que.put('Ратуша')
-                elif building == 'houses':
-                    que.put('Дома')
-                elif building == 'farm':
-                    que.put('Ферма')
-                elif building == 'sawmill':
-                    que.put('Лесопилка')
-                elif building == 'mine':
-                    que.put('Шахта')
-                elif building == 'barracks':
-                    que.put('Казармы')
-                elif building == 'wall':
-                    que.put('Стена')
+            que.put(building)
             que.put('Улучшить')
             doSendPpl(building)
     else:
-        globalobjs.SendInfo_cb('ресурсов на постройку %s недостаточно' % building)
+        totalGold = getUpgrCost(building)['total'] - resources['wood']*2 - resources['stone']*2
+        needGold = totalGold - resources['gold']
+        time = math.ceil(needGold / getTotalIncom())
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНеобходимо %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, time))
 
 #Закупить ресурсы
 def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
