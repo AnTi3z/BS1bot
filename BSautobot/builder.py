@@ -3,7 +3,7 @@ from .globalobjs import *
 import math
 import time
 from . import queues
-
+from . import timer
 
 #Проверка что ресурсов хватает на апгрейд
 def isResEnough(building):
@@ -208,10 +208,9 @@ def getNextUpgrBld():
 
 #Проапгрейдить здание
 def doUpgrade(building=False):
-    #TODO: Если ресурсы обновлялись больше минуты назад, делаем "наверх", ставим флаг doUpgrade
-    # и делаем апгрейд в парсере сообщений при обновлении
     if not building: building = getNextUpgrBld()
 
+    if globalobjs.debug_on: globalobjs.SendInfo_cb("\u26a0 doUpgrade: %s" % building)
     if resources['time'] < int(time.time()/60):
         queues.msgQueAdd('Наверх')
         #Запустить таймер на 5 секунд или time.sleep(5)
@@ -220,13 +219,12 @@ def doUpgrade(building=False):
 
     if isResEnough(building):
         if isResBuyingNeed(building):
-            doBuyReses(building,True)
-            #doBuyReses(cost['wood'],cost['stone'],0)
-            #queues.cmdQueAdd('build', building)
+            doBuyReses(building)
+            #cost = getUpgrCost(building)
+            #doBuyReses(wood=cost['wood'],stone=cost['stone'])
+            queues.cmdQueAdd(('build', building))
             return
         else:
-            #queues.msgQueAdd('Наверх')
-            #....
             queues.msgQueAdd('Наверх')
             if building == 'Требушет':
                 queues.msgQueAdd('Мастерская')
@@ -236,15 +234,19 @@ def doUpgrade(building=False):
             queues.msgQueAdd('Улучшить')
             doSendPpl(building)
             queues.msgQueAdd('Наверх')
+            globalobjs.SendInfo_cb('\U0001f4ac Здание %s улучшено!' % building)
+            if globalobjs.Autobuild: queues.cmdQueAdd(('build',))
     else:
         totalGold = getUpgrCost(building)['total'] - resources['wood']*2 - resources['stone']*2
         needGold = totalGold - resources['gold']
         lefttime = math.ceil(needGold / getTotalIncom())
-        #Запустить таймер на time+1
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНеобходимо %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
+        #Запустить таймер через расчетное время (+1 минута)
+        timer.setUpgrTimer(building,lefttime+1)
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
 
 #Закупить ресурсы
-def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
+#перенести в модуль tools
+def doBuyReses(building):
     #Закупаем ресурсы
     cost = getUpgrCost(building)
     queues.msgQueAdd('Наверх')
@@ -263,12 +265,6 @@ def doBuyReses(building=getNextUpgrBld(),doUpgr=False):
         queues.msgQueAdd(str(cost['stone'] - resources['stone']))
         #В предположении что закупка состится успешно:
         resources['stone'] = cost['stone']
-
-    #И делаем апгрейд если надо
-    if doUpgr: doUpgrade(building)
-    #TODO: устанавливаем флаг doUpgrade и делаем апгрейд в парсере сообщений
-    #В таком случае возможно срабатывание раньше времени и повторная закупка ресурсов
-    #Вариант: постановка в очередь маркера окончания закупки
 
 #Отправить в здание людей
 def doSendPpl(building):

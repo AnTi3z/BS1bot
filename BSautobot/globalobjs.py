@@ -1,5 +1,3 @@
-#import queue
-
 resources = {'gold' : 0, 'wood' : 0, 'stone' : 0, 'food' : 0, 'time' : None}
 
 buildings = {'Ратуша' : {'lvl' : 0}, 'Склад' : {'lvl' : 0, 'ppl' : 0}, 'Дома' : {'lvl' : 0, 'ppl' : 0},
@@ -13,5 +11,6 @@ costCoef = {'Ратуша' : (500, 200, 200), 'Склад' : (200, 100, 100), '�
 
 SendMsg_cb = None
 SendInfo_cb = None
+Autobuild = True
 
-debug_on = True
+debug_on = False
