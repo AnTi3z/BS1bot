@@ -221,7 +221,9 @@ def doUpgrade(building=None):
         if isResBuyingNeed(building):
             #doBuyReses(building)
             cost = getUpgrCost(building)
-            tools.doBuyReses(wood=cost['wood'],stone=cost['stone'])
+            woodNeed = cost['wood'] - resources['wood']
+            stoneNeed = cost['stone'] - resources['stone']
+            tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
             queues.cmdQueAdd(('build', building))
             return
         else:
