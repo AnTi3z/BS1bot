@@ -2,6 +2,7 @@ from . import globalobjs
 from .globalobjs import *
 import math
 import time
+from . import tools
 from . import queues
 from . import timer
 
@@ -207,10 +208,9 @@ def getNextUpgrBld():
 
 
 #Проапгрейдить здание
-def doUpgrade(building=False):
-    if not building: building = getNextUpgrBld()
+def doUpgrade(building=None):
+    building = building or getNextUpgrBld()
 
-    if globalobjs.debug_on: globalobjs.SendInfo_cb("\u26a0 doUpgrade: %s" % building)
     if resources['time'] < int(time.time()/60):
         queues.msgQueAdd('Наверх')
         #Запустить таймер на 5 секунд или time.sleep(5)
@@ -219,9 +219,9 @@ def doUpgrade(building=False):
 
     if isResEnough(building):
         if isResBuyingNeed(building):
-            doBuyReses(building)
-            #cost = getUpgrCost(building)
-            #doBuyReses(wood=cost['wood'],stone=cost['stone'])
+            #doBuyReses(building)
+            cost = getUpgrCost(building)
+            tools.doBuyReses(wood=cost['wood'],stone=cost['stone'])
             queues.cmdQueAdd(('build', building))
             return
         else:
@@ -234,15 +234,16 @@ def doUpgrade(building=False):
             queues.msgQueAdd('Улучшить')
             doSendPpl(building)
             queues.msgQueAdd('Наверх')
-            globalobjs.SendInfo_cb('\U0001f4ac Здание %s улучшено!' % building)
-            if globalobjs.Autobuild: queues.cmdQueAdd(('build',))
+            globalobjs.SendInfo_cb('\u2755 Апгрейд здания: %s' % building)
+            if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
         totalGold = getUpgrCost(building)['total'] - resources['wood']*2 - resources['stone']*2
         needGold = totalGold - resources['gold']
         lefttime = math.ceil(needGold / getTotalIncom())
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
         timer.setUpgrTimer(building,lefttime+1)
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
+
 
 #Закупить ресурсы
 #перенести в модуль tools

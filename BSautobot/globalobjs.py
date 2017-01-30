@@ -11,6 +11,8 @@ costCoef = {'Ратуша' : (500, 200, 200), 'Склад' : (200, 100, 100), '�
 
 SendMsg_cb = None
 SendInfo_cb = None
-Autobuild = True
+
+AUTOBUILD = True
+AUTOFEED = True
 
 debug_on = False
