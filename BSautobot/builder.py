@@ -212,14 +212,15 @@ def doUpgrade(building=None):
     building = building or getNextUpgrBld()
 
     if resources['time'] < int(time.time()/60):
+        queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
+        queues.queThrdsLock.release()
         #Запустить таймер на 5 секунд или time.sleep(5)
         queues.cmdQueAdd(('build', building))
         return
 
     if isResEnough(building):
         if isResBuyingNeed(building):
-            #doBuyReses(building)
             cost = getUpgrCost(building)
             woodNeed = cost['wood'] - resources['wood']
             stoneNeed = cost['stone'] - resources['stone']
@@ -227,6 +228,7 @@ def doUpgrade(building=None):
             queues.cmdQueAdd(('build', building))
             return
         else:
+            queues.queThrdsLock.acquire()
             queues.msgQueAdd('Наверх')
             if building == 'Требушет':
                 queues.msgQueAdd('Мастерская')
@@ -236,6 +238,7 @@ def doUpgrade(building=None):
             queues.msgQueAdd('Улучшить')
             doSendPpl(building)
             queues.msgQueAdd('Наверх')
+            queues.queThrdsLock.release()
             globalobjs.SendInfo_cb('\u2755 Апгрейд здания: %s' % building)
             if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
@@ -245,29 +248,6 @@ def doUpgrade(building=None):
         globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
         timer.setUpgrTimer(building,lefttime+1)
-
-
-#Закупить ресурсы
-#перенести в модуль tools
-def doBuyReses(building):
-    #Закупаем ресурсы
-    cost = getUpgrCost(building)
-    queues.msgQueAdd('Наверх')
-    queues.msgQueAdd('Торговля')
-    queues.msgQueAdd('Купить')
-
-    if cost['wood'] > resources['wood']:
-        queues.msgQueAdd('Дерево')
-        queues.msgQueAdd(str(cost['wood'] - resources['wood']))
-        #В предположении что закупка состится успешно:
-        resources['wood'] = cost['wood']
-
-    if cost['stone'] > resources['stone']:
-        queues.msgQueAdd('Назад')
-        queues.msgQueAdd('Камень')
-        queues.msgQueAdd(str(cost['stone'] - resources['stone']))
-        #В предположении что закупка состится успешно:
-        resources['stone'] = cost['stone']
 
 #Отправить в здание людей
 def doSendPpl(building):
