@@ -236,7 +236,12 @@ def doUpgrade(building=None):
                 queues.msgQueAdd('Постройки')
             queues.msgQueAdd(building)
             queues.msgQueAdd('Улучшить')
-            doSendPpl(building)
+            #Отправляем в постройку людей(добавить проверки)
+            if building != 'Ратуша' and building != 'Дома':
+                queues.msgQueAdd('Отправить')
+                if building != 'Казармы': queues.msgQueAdd('40')
+                elif building != 'Требушет': queues.msgQueAdd('1')
+                else: queues.msgQueAdd('1')
             queues.msgQueAdd('Наверх')
             queues.queThrdsLock.release()
             globalobjs.SendInfo_cb('\u2755 Апгрейд здания: %s' % building)
