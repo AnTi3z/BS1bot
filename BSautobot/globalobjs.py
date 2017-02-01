@@ -14,5 +14,6 @@ SendInfo_cb = None
 
 AUTOBUILD = True
 AUTOFEED = True
+FOOD_RESERV_TIME = 4
 
 debug_on = False
