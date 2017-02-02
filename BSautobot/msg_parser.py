@@ -34,6 +34,26 @@ def msgParser(text):
         if bld.group(4): buildings['Склад']['ppl'] = int(bld.group(4))
         resources['gold'] = int(bld.group(5))
         buildings['Дома']['ppl'] = int(bld.group(6))
+        
+    wall = re.search(r"^.Стена\s*\n\nУровень\s+(\d+)\nЛучники\s+(\d+)[\s\S]+\nПрочность\s+(\d+).+\n\nЗолото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
+    if wall:
+    	  buildings['Стена']['lvl'] = int(wall.group(1))
+    	  buildings['Стена']['ppl'] = int(wall.group(2))
+    	  buildings['Стена']['str'] = int(wall.group(3))
+    	  resources['gold'] = int(wall.group(4))
+        buildings['Дома']['ppl'] = int(wall.group(5))
+        
+    treb = re.search(r"^.Требушет\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+\n\nЗолото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
+    if treb:
+    	  buildings['Требушет']['lvl'] = int(treb.group(1))
+    	  buildings['Требушет']['ppl'] = int(treb.group(2))
+    	  resources['gold'] = int(treb.group(3))
+        buildings['Дома']['ppl'] = int(treb.group(4))
+    
+    treb = re.search(r"^Мастерская\n\n.Требушет\s+(\d+).+?(\d+).+", text)
+    if treb:
+    	  buildings['Требушет']['lvl'] = int(treb.group(1))
+    	  buildings['Требушет']['ppl'] = int(treb.group(2))
 
     hous = re.search(r"^.Дома\s*\n\nУровень\s+(\d+)\nЖители\s+(\d+)[\s\S]+?Склад\s+(\d+)", text)
     if hous:
