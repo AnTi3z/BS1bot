@@ -8,18 +8,21 @@ from . import timer
 
 #Проверка что ресурсов хватает на апгрейд
 def isResEnough(building):
-    cost = getUpgrCost(building)
-    overGold = resources['gold'] - cost['gold']
-
-    #Мы не продаем ресурсы - а только покупаем
-    if overGold >= 0:
-        needWood = cost['wood'] - resources['wood']
-        if needWood < 0: needWood = 0
-        needStone = cost['stone'] - resources['stone']
-        if needStone < 0: needStone = 0
-        if overGold - needWood*2 - needStone*2 >= 0: return True
+    if getResNeed(building)['total'] == 0: return True
     else: return False
 
+#Необходимые для апгрейда ресурсы
+def getResNeed(building):
+    cost = getUpgrCost(building)
+    needGold = cost['gold'] - resources['gold']
+    needWood = cost['wood'] - resources['wood']
+    if needWood < 0: needWood = 0
+    needStone = cost['stone'] - resources['stone']
+    if needStone < 0: needStone = 0
+    total = needGold + needWood * 2 + needStone * 2
+    if total < 0: total = 0
+    if needGold < 0: needGold = 0
+    return {'gold' : needGold, 'wood' : needWood, 'stone' : needStone, 'total' : total}
 
 #Проверка что надо закупать лес или камни для апгрейда
 def isResBuyingNeed(building):
@@ -247,10 +250,9 @@ def doUpgrade(building=None):
             globalobjs.SendInfo_cb('\u2755 Апгрейд здания: %s' % building)
             if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
-        totalGold = getUpgrCost(building)['total'] - resources['wood']*2 - resources['stone']*2
-        needGold = totalGold - resources['gold']
+        needGold = getResNeed(building)['total']
         lefttime = math.ceil(needGold / getTotalIncom())
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0 из %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, totalGold, lefttime))
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
         timer.setUpgrTimer(building,lefttime+1)
 

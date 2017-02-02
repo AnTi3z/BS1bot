@@ -22,8 +22,8 @@ def msgParser(text):
         if blds.group(6): buildings['Ферма']['lvl'] = int(blds.group(6)); buildings['Ферма']['ppl'] = int(blds.group(7))
         if blds.group(8): buildings['Лесопилка']['lvl'] = int(blds.group(8)); buildings['Лесопилка']['ppl'] = int(blds.group(9))
         if blds.group(10): buildings['Шахта']['lvl'] = int(blds.group(10)); buildings['Шахта']['ppl'] = int(blds.group(11))
-        if blds.group(12): war_bldngs['Казармы']['lvl'] = int(blds.group(12)); war_bldngs['Казармы']['ppl'] = int(blds.group(13))
-        if blds.group(14): war_bldngs['Стена']['lvl'] = int(blds.group(14)); war_bldngs['Стена']['lvl'] = int(blds.group(15))
+        if blds.group(12): buildings['Казармы']['lvl'] = int(blds.group(12)); buildings['Казармы']['ppl'] = int(blds.group(13))
+        if blds.group(14): buildings['Стена']['lvl'] = int(blds.group(14)); buildings['Стена']['ppl'] = int(blds.group(15))
 
     bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+?\n\n(?:Склад\s+(\d+))?[\s\S]+?Золото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
     if bld:

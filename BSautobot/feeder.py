@@ -18,7 +18,7 @@ def doBuyFood():
         foodReserv = foodNeed + resources['food']
 
     #Покупка
-    doBuyReses(food=foodNeed)
+    doBuyReses(food=int(foodNeed))
 
     #Корректировка времени на которое расчитан запас еды
     if foodConsum * hrsReserv * 60 > foodReserv: hrsReserv = foodReserv / (foodConsum * 60)
