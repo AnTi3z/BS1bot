@@ -27,10 +27,7 @@ def msgParser(text):
 
     bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+?\n\n(?:Склад\s+(\d+))?[\s\S]+?Золото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
     if bld:
-        if bld.group(1) == 'Лесопилка': build = 'Лесопилка'
-        elif bld.group(1) == 'Шахта': build = 'Шахта'
-        elif bld.group(1) == 'Ферма': build = 'Ферма'
-        else: build = 'Склад'
+        build = bld.group(1)
 
         buildings[build]['lvl'] = int(bld.group(2))
         buildings[build]['ppl'] = int(bld.group(3))

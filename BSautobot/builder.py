@@ -40,7 +40,7 @@ def isStorEnough(building):
 #Необходимый уровень склада для апгрейда на lvlsUp уровней
 def getStorReq(building, lvlsUp=1):
     preTargetLvl = buildings[building]['lvl'] + lvlsUp - 1
-    return math.ceil(math.sqrt(max(costCoef[building][1:3]) * (preTargetLvl ** 2 + 3 * preTargetLvl + 2)/100 + 100) - 10)
+    return math.ceil(math.sqrt(max(COST_COEF[building][1:3]) * (preTargetLvl ** 2 + 3 * preTargetLvl + 2)/100 + 100) - 10)
 
 
 #Стоимость апгрейда на lvlsUp уровней
@@ -55,9 +55,9 @@ def getUpgrCost(building, lvlsUp=1):
     #Если текущий уровень - 0, то -Sn/2 должен обращаться в 1, тогда Sn = -2
     if srcLvl == 0: Sn = -2
     else: Sn = round(srcLvl * (srcLvl-1) * ((2*srcLvl+8)/6 + 2/srcLvl))
-    gold = round(costCoef[building][0] * (Sm - Sn) / 2)
-    wood = round(costCoef[building][1] * (Sm - Sn) / 2)
-    stone = round(costCoef[building][2] * (Sm - Sn) / 2)
+    gold = round(COST_COEF[building][0] * (Sm - Sn) / 2)
+    wood = round(COST_COEF[building][1] * (Sm - Sn) / 2)
+    stone = round(COST_COEF[building][2] * (Sm - Sn) / 2)
     return {'gold' : gold, 'wood' : wood, 'stone' : stone, 'total' : gold + wood * 2 + stone * 2}
 
 
@@ -242,12 +242,12 @@ def doUpgrade(building=None):
             #Отправляем в постройку людей(добавить проверки)
             if building != 'Ратуша' and building != 'Дома':
                 queues.msgQueAdd('Отправить')
-                if building != 'Казармы': queues.msgQueAdd('40')
-                elif building != 'Требушет': queues.msgQueAdd('1')
-                else: queues.msgQueAdd('1')
+                if building == 'Казармы': queues.msgQueAdd('40')
+                elif building == 'Требушет': queues.msgQueAdd('1')
+                else: queues.msgQueAdd('10')
             queues.msgQueAdd('Наверх')
             queues.queThrdsLock.release()
-            globalobjs.SendInfo_cb('\u2755 Апгрейд здания: %s' % building)
+            globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
         needGold = getResNeed(building)['total']
