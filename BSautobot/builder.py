@@ -1,7 +1,8 @@
-from . import globalobjs
-from .globalobjs import *
 import math
 import time
+
+from . import globalobjs
+from .globalobjs import *
 from . import tools
 from . import queues
 from . import timer
@@ -226,7 +227,9 @@ def doUpgrade(building=None):
         if isResBuyingNeed(building):
             cost = getUpgrCost(building)
             woodNeed = cost['wood'] - resources['wood']
+            if woodNeed < 0: woodNeed = 0
             stoneNeed = cost['stone'] - resources['stone']
+            if stoneNeed < 0: stoneNeed = 0
             tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
             queues.cmdQueAdd(('build', building))
             return

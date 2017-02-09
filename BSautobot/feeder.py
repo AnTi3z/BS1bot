@@ -1,8 +1,19 @@
+import time
+
 from .globalobjs import *
 from .tools import doBuyReses
 from . import timer
+from . import queues
 
 def doBuyFood():
+    if resources['time'] < int(time.time()/60):
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.queThrdsLock.release()
+        #Запустить таймер на 5 секунд или time.sleep(5)
+        queues.cmdQueAdd(('feed',))
+        return
+
     hrsReserv = FOOD_RESERV_TIME
 
     foodConsum = (buildings['Дома']['lvl'] - min(buildings['Склад']['lvl'],buildings['Ферма']['lvl'])) * 10

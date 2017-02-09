@@ -3,7 +3,6 @@ from . import queues
 from . import msg_parser
 from . import commands
 
-
 def setSendMsg(cb):
     globalobjs.SendMsg_cb = cb
 

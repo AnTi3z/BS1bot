@@ -1,6 +1,7 @@
-from . import globalobjs
 import time
 import threading
+
+from . import globalobjs
 from . import builder
 from . import feeder
 
