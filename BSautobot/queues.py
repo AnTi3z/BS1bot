@@ -41,12 +41,10 @@ def queGetNext():
         que_stoped = True
 
 def cmdQueParse():
-    cmd_list = cmdQueue.get_nowait()
-    cmd = cmd_list[0]
-    if len(cmd_list) > 1: params = cmd_list[1:]
+    cmd, *params = cmdQueue.get_nowait()
 
     if cmd == 'build':
-        if len(cmd_list) > 1: 
+        if len(params) > 0: 
             builder.doUpgrade(params[0])
         else:
             builder.doUpgrade()

@@ -253,11 +253,14 @@ def doUpgrade(building=None):
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
-        needGold = getResNeed(building)['total']
-        lefttime = math.ceil(needGold / getTotalIncom())
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needGold, lefttime))
+        needReses = getResNeed(building)
+        needTotal = needReses['total']
+        lefttime = math.ceil(needTotal / getTotalIncom())
+        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
         timer.setUpgrTimer(building,lefttime+1)
+        #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
+        tools.doTargetReses(gold=needReses['gold'],wood=needReses['wood'],stone=needReses['stone'])
 
 #Отправить в здание людей
 def doSendPpl(building):

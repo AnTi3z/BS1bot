@@ -29,3 +29,11 @@ def doBuyReses(wood=0, stone=0, food=0):
     queues.queThrdsLock.release()
 
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
+
+def doTargetReses(gold=0, wood=0, stone=0, food=0):
+    #Закупаемся до MAX_GOLD/2 но не реже чем раз в SAVE_MONEY_TIME
+    #Если золота больше MAX_GOLD/2 то:
+    #doBuyReses
+    #Если ресурсов мало, то:
+    #timer.TargetReses
+    pass
