@@ -111,6 +111,11 @@ def getIncUp(building):
         return incomUp
     else: return 0
 
+#Расчет производительности производства
+def getProduct(building):
+    if building == 'Лесопилка' or building == 'Шахта' or building == 'ферма':
+        return min(buildings[building]['ppl'],buildings['Склад']['ppl'])
+    else: return 0
 
 #Расчет дохода по зданию
 def getIncom(building):
@@ -253,14 +258,14 @@ def doUpgrade(building=None):
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if AUTOBUILD: queues.cmdQueAdd(('build',))
     else:
-        needReses = getResNeed(building)
-        needTotal = needReses['total']
+        bldCost = getUpgrCost(building)
+        needTotal = getResNeed(building)['total']
         lefttime = math.ceil(needTotal / getTotalIncom())
         globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
-        timer.setUpgrTimer(building,lefttime+1)
+        timer.setUpgrTimer(lefttime+1, building)
         #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
-        tools.doTargetReses(gold=needReses['gold'],wood=needReses['wood'],stone=needReses['stone'])
+        tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
 
 #Отправить в здание людей
 def doSendPpl(building):

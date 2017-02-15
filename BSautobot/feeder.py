@@ -1,7 +1,7 @@
 import time
 
 from .globalobjs import *
-from .tools import doBuyReses
+from . import tools
 from . import timer
 from . import queues
 
@@ -29,7 +29,7 @@ def doBuyFood():
         foodReserv = foodNeed + resources['food']
 
     #Покупка
-    doBuyReses(food=int(foodNeed))
+    tools.doBuyReses(food=int(foodNeed))
 
     #Корректировка времени на которое расчитан запас еды
     if foodConsum * hrsReserv * 60 > foodReserv: hrsReserv = foodReserv / (foodConsum * 60)

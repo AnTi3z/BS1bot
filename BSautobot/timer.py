@@ -4,12 +4,13 @@ import threading
 from . import globalobjs
 from . import builder
 from . import feeder
+from . import tools
 
 upgrTimerThread = None
 feedTimerThread = None
 resTimerThread = None
 
-def setUpgrTimer(bld, minutes):
+def setUpgrTimer(minutes, bld):
     global upgrTimerThread
     global upgrTimerStoptime
 
@@ -31,9 +32,16 @@ def setFeedTimer(minutes):
     feedTimerStoptime = time.time() + minutes*60
     globalobjs.SendInfo_cb('\U0001f4ac Таймер на закупку еды\U0001f356 установлен на %d\U0001f553 минут.' % minutes)
 
-def setResTimer(gold, wood, stone, food, minutes):
+def setResTimer(minutes, gold, wood, stone, food):
+    global resTimerThread
+    global resTimerStoptime
+
     if resTimerThread: resTimerThread.cancel()
-    resTimerThread = threading.Timer(minutes*60, tools.doTargetReses, args=[gold,wood,stone,food])
-    resTimerThread.daemon = True
-    resTimerThread.start()
-    resTimerStoptime = time.time() + minutes*60
+    #Запускаем таймер только если до/после апгрейда останется больше 2 минут... иначе апргрейд сам запустит новый таймер
+    if abs(upgrTimerStoptime - time.time() + minutes*60) > 2:
+        #if resTimerThread: resTimerThread.cancel()
+        resTimerThread = threading.Timer(minutes*60, tools.doTargetReses, args=[gold,wood,stone,food])
+        resTimerThread.daemon = True
+        resTimerThread.start()
+        resTimerStoptime = time.time() + minutes*60
+        globalobjs.SendInfo_cb('\U0001f4ac Таймер сохранения золота установлен на %d\U0001f553 минут.' % minutes)

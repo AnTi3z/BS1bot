@@ -1,5 +1,11 @@
+import time
+
 from . import globalobjs
+from .globalobjs import *
 from . import queues
+from . import builder
+from . import timer
+
 
 def doBuyReses(wood=0, stone=0, food=0):
     if wood == 0 and stone == 0 and food == 0: return
@@ -31,9 +37,82 @@ def doBuyReses(wood=0, stone=0, food=0):
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
 
 def doTargetReses(gold=0, wood=0, stone=0, food=0):
-    #Закупаемся до MAX_GOLD/2 но не реже чем раз в SAVE_MONEY_TIME
-    #Если золота больше MAX_GOLD/2 то:
-    #doBuyReses
-    #Если ресурсов мало, то:
-    #timer.TargetReses
-    pass
+    if resources['time'] < int(time.time()/60):
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.queThrdsLock.release()
+        #Запустить таймер на 5 секунд или time.sleep(5)
+        queues.cmdQueAdd(('reses',gold, wood, stone, food))
+        return
+    
+    food = 0 #пока без учета еды
+
+    print("TARGET: Gold: %d; Wood: %d; Stone: %d" % (gold, wood, stone))
+
+    woodToBuy = 0
+    stoneToBuy = 0
+    maxWood = wood
+    maxStone = stone
+
+    #Закупаемся до MIN_GOLD но не реже чем раз в SAVE_MONEY_TIME
+
+    if (resources['gold'] >= MAX_GOLD):
+        #Оставшееся время до накопления необходимого количества золота
+        print("timetoGold: %f" % ((gold - resources['gold'])/builder.getIncom('Ратуша')))
+        if gold > resources['gold']: timetoGold = int((gold - resources['gold'])/builder.getIncom('Ратуша'))
+        else: timetoGold = 0
+        #Оставшееся время до накопления необходимого количества дерева
+        if wood > resources['wood']: timetoWood = int((wood - resources['wood'])/min(buildings['Лесопилка']['ppl'],buildings['Склад']['ppl']))
+        else: timetoWood = 0
+        #Оставшееся время до накопления необходимого количества камня
+        if stone > resources['stone']: timetoStone = int((stone - resources['stone'])/min(buildings['Шахта']['ppl'],buildings['Склад']['ppl']))
+        else: timetoStone = 0
+
+        print("timetoGold: %d; timetoWood: %d; timetoStone: %d" % (timetoGold, timetoWood, timetoStone))
+
+        #Закупаемся максимум до MIN_GOLD
+        moneyToSpend = resources['gold'] - MIN_GOLD
+        if moneyToSpend < 0: moneyToSpend = 0
+
+        print("Money to spend: %d" % moneyToSpend)
+
+        if timetoGold < timetoWood and timetoGold < timetoStone:
+            #Закупаем ресурсы пропорционально оставшемуся времени
+            woodToBuy = int((moneyToSpend/2) * (timetoWood/(timetoWood+timetoStone)))
+            stoneToBuy = int((moneyToSpend/2) * (timetoStone/(timetoWood+timetoStone)))
+        elif timetoGold < timetoWood:
+            #Закупаем только дерево
+            woodToBuy = int((moneyToSpend/2))
+        elif timetoGold < timetoStone:
+            #Закупаем только камень
+            stoneToBuy = int((moneyToSpend/2))
+        else: return
+
+        print("woodToBuy: %d; stoneToBuy: %d" % (woodToBuy, stoneToBuy))
+
+        #Проверяем что закупаем не слишком много
+        if gold > MIN_GOLD:
+            lastPeriod = int((gold - MIN_GOLD)/builder.getIncom('Ратуша'))
+            maxWood = wood - lastPeriod * min(buildings['Лесопилка']['ppl'],buildings['Склад']['ppl'])
+            if maxWood < 0: maxWood = 0
+            maxStone = stone - lastPeriod * min(buildings['Шахта']['ppl'],buildings['Склад']['ppl'])
+            if maxStone < 0: maxStone = 0
+
+        if woodToBuy > 0 and resources['wood'] + woodToBuy > maxWood: woodToBuy = maxWood - resources['wood']
+        if woodToBuy < 0: woodToBuy = 0
+        if stoneToBuy > 0 and resources['stone'] + stoneToBuy > maxStone: stoneToBuy = maxStone - resources['stone']
+        if stoneToBuy < 0: stoneToBuy = 0
+            
+        print("maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d" % (maxWood, woodToBuy, maxStone, stoneToBuy))
+
+        #Закупаем
+        if woodToBuy > 0 or stoneToBuy >0:
+            globalobjs.SendInfo_cb('\U0001f4ac Сохраняем золото.')
+            doBuyReses(wood=woodToBuy, stone=stoneToBuy)
+
+    #Вероятно потребуются еще закупки
+    if (resources['wood'] + woodToBuy) < maxWood or (resources['stone'] + stoneToBuy) < maxStone:
+        expectTime = int((MAX_GOLD - (resources['gold'] - woodToBuy*2 - stoneToBuy*2))/builder.getIncom('Ратуша')) + 1
+        if expectTime < 2: expectTime = 2
+        if expectTime > SAVE_MONEY_TIME: expectTime = SAVE_MONEY_TIME
+        timer.setResTimer(expectTime,gold,wood,stone,food)

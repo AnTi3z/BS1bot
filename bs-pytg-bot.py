@@ -43,7 +43,7 @@ def main_loop(sender):  # name "example_function" and given parameters are defin
             sender.status_online()  # so we will stay online.
             # (if we are offline it might not receive the messages instantly,
             #  but eventually we will get them)
-            print(msg)
+            #print(msg)
             if msg.event != "message":
                 continue  # is not a message.
             if "text" not in msg or msg.text is None: # we have media instead.

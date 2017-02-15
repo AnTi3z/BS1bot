@@ -4,6 +4,7 @@ import time
 
 from . import builder
 from . import feeder
+from . import tools
 from . import globalobjs
 
 queThrdsLock = threading.Lock()
@@ -50,3 +51,5 @@ def cmdQueParse():
             builder.doUpgrade()
     elif cmd == 'feed':
         feeder.doBuyFood()
+    elif cmd == 'reses':
+        tools.doTargetReses(params[0], params[1], params[2])
