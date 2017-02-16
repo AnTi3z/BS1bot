@@ -145,3 +145,51 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if expectTime < 1: expectTime = 1
         if expectTime > SAVE_MONEY_TIME: expectTime = SAVE_MONEY_TIME
         timer.setResTimer(expectTime,gold,wood,stone,food)
+
+def doAutoPpl():
+    #Обновить информацию о людях если требуется
+    if buildings['time'] < int(time.time()/60):
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.msgQueAdd('Постройки')
+        queues.queThrdsLock.release()
+        #Запустить таймер на 5 секунд или time.sleep(5)
+        queues.cmdQueAdd(('ppl',))
+        return
+
+    #Сначала заполняем казармы потом стену
+    for bldRecep in ('Казармы','Стена'):
+        pplNeed = getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
+        if pplNeed > 0:
+            globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска.')
+            #Свободными людьми
+            pplSend = min(pplNeed,buildings['Дома']['ppl'])
+            builder.doSendPpl(bldRecep,pplSend)
+            pplNeed -= pplSend
+            buildings['Дома']['ppl'] -= pplSend
+            #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
+            for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
+                if pplNeed > 0:
+                    pplSend = min(pplNeed,buildings[bld]['ppl'])
+                    if pplSend > 0:
+                         builder.doRetPpl(bldDonor,pplSend)
+                         builder.doSendPpl(bldRecep,pplSend)
+                         pplNeed -= pplSend
+                         buildings[bldDonor]['ppl'] -= pplSend
+                else: break
+
+    if buildings['Дома']['ppl'] > 0:
+        globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
+        for bld in ('Склад','Ферма','Шахта','Лесопилка','Требушет'):
+            pplNeed = getMaxPpl(bld) - buildings[bld]['ppl']
+            if pplNeed > 0:
+                pplSend = min(pplNeed,buildings['Дома']['ppl'])
+                builder.doSendPpl(bld,pplSend)
+                pplNeed -= pplSend
+                buildings['Дома']['ppl'] -= pplSend
+                if buildings['Дома']['ppl'] <= 0: break
+                
+
+    if buildings['Дома']['ppl'] <= 0:
+        timer.setPplTimer(1)
+        #Если свободных людей 0 - запускаем таймер на 1 минуту

@@ -261,6 +261,7 @@ def doUpgrade(building=None):
     else:
         bldCost = getUpgrCost(building)
         needTotal = getResNeed(building)['total']
+        #Придумать обработчик при getTotalIncom = 0
         lefttime = math.ceil(needTotal / getTotalIncom())
         globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
@@ -269,7 +270,37 @@ def doUpgrade(building=None):
         tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
 
 #Отправить в здание людей
-def doSendPpl(building):
-    #Проверить количество нехватающих людей в здании
-    #Отправить максимум из тех что есть
-    pass
+def doSendPpl(building, ppl):
+    if ppl <= 0 or building == 'Ратуша' or building == 'Дома': return
+    
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    if building == 'Требушет':
+        queues.msgQueAdd('Мастерская')
+    else:
+        queues.msgQueAdd('Постройки')
+    queues.msgQueAdd(building)
+    #Отправляем в постройку людей(добавить проверки)
+    if building == 'Казармы' or building == 'Стена': queues.msgQueAdd('Обучить')
+    else: queues.msgQueAdd('Отправить')
+    queues.msgQueAdd(str(ppl))
+    #queues.msgQueAdd('Наверх')
+    queues.queThrdsLock.release()
+    globalobjs.SendInfo_cb('\u26a0 Отправляем %d человек в %s' % (ppl,building))
+
+def doRetPpl(building, ppl):
+    if ppl <= 0 or building == 'Ратуша' or building == 'Дома': return
+    
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    if building == 'Требушет':
+        queues.msgQueAdd('Мастерская')
+    else:
+        queues.msgQueAdd('Постройки')
+    queues.msgQueAdd(building)
+    #Заюираем из постройки людей(добавить проверки)
+    queues.msgQueAdd('Отозвать')
+    queues.msgQueAdd(str(ppl))
+    #queues.msgQueAdd('Наверх')
+    queues.queThrdsLock.release()
+    globalobjs.SendInfo_cb('\u26a0 Забираем %d человек из %s' % (ppl,building))
