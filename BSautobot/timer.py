@@ -19,7 +19,7 @@ def setUpgrTimer(minutes, bld):
     upgrTimerThread.daemon = True
     upgrTimerThread.start()
     upgrTimerStoptime = time.time() + minutes*60
-    globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд %s установлен на %d\U0001f553 минут.' % (bld,minutes))
+    globalobjs.SendInfo_cb('\U0001f553 Таймер на апгрейд %s установлен на %d\U0001f553 минут.' % (bld,minutes))
 
 def setFeedTimer(minutes):
     global feedTimerThread
@@ -30,7 +30,7 @@ def setFeedTimer(minutes):
     feedTimerThread.daemon = True
     feedTimerThread.start()
     feedTimerStoptime = time.time() + minutes*60
-    globalobjs.SendInfo_cb('\U0001f4ac Таймер на закупку еды\U0001f356 установлен на %d\U0001f553 минут.' % minutes)
+    globalobjs.SendInfo_cb('\U0001f553 Таймер на закупку еды\U0001f356 установлен на %d\U0001f553 минут.' % minutes)
 
 def setResTimer(minutes, gold, wood, stone, food):
     global resTimerThread
@@ -44,4 +44,4 @@ def setResTimer(minutes, gold, wood, stone, food):
         resTimerThread.daemon = True
         resTimerThread.start()
         resTimerStoptime = time.time() + minutes*60
-        globalobjs.SendInfo_cb('\U0001f4ac Таймер сохранения золота установлен на %d\U0001f553 минут.' % minutes)
+        globalobjs.SendInfo_cb('\U0001f553 Таймер сохранения золота установлен на %d\U0001f553 минут.' % minutes)

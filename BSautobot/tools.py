@@ -47,8 +47,6 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
     
     food = 0 #пока без учета еды
 
-    print("TARGET: Gold: %d; Wood: %d; Stone: %d" % (gold, wood, stone))
-
     woodToBuy = 0
     stoneToBuy = 0
     maxWood = wood
@@ -56,9 +54,8 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
     #Закупаемся до MIN_GOLD но не реже чем раз в SAVE_MONEY_TIME
 
-    if (resources['gold'] >= MAX_GOLD):
+    if (resources['gold'] > MIN_GOLD):
         #Оставшееся время до накопления необходимого количества золота
-        print("timetoGold: %f" % ((gold - resources['gold'])/builder.getIncom('Ратуша')))
         if gold > resources['gold']: timetoGold = int((gold - resources['gold'])/builder.getIncom('Ратуша'))
         else: timetoGold = 0
         #Оставшееся время до накопления необходимого количества дерева
@@ -68,13 +65,13 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if stone > resources['stone']: timetoStone = int((stone - resources['stone'])/min(buildings['Шахта']['ppl'],buildings['Склад']['ppl']))
         else: timetoStone = 0
 
-        print("timetoGold: %d; timetoWood: %d; timetoStone: %d" % (timetoGold, timetoWood, timetoStone))
+        #print("timetoGold: %d; timetoWood: %d; timetoStone: %d" % (timetoGold, timetoWood, timetoStone))
 
         #Закупаемся максимум до MIN_GOLD
         moneyToSpend = resources['gold'] - MIN_GOLD
         if moneyToSpend < 0: moneyToSpend = 0
 
-        print("Money to spend: %d" % moneyToSpend)
+        #print("Money to spend: %d" % moneyToSpend)
 
         if timetoGold < timetoWood and timetoGold < timetoStone:
             #Закупаем ресурсы пропорционально оставшемуся времени
@@ -88,7 +85,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
             stoneToBuy = int((moneyToSpend/2))
         else: return
 
-        print("woodToBuy: %d; stoneToBuy: %d" % (woodToBuy, stoneToBuy))
+        #print("woodToBuy: %d; stoneToBuy: %d" % (woodToBuy, stoneToBuy))
 
         #Проверяем что закупаем не слишком много
         if gold > MIN_GOLD:
@@ -103,7 +100,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if stoneToBuy > 0 and resources['stone'] + stoneToBuy > maxStone: stoneToBuy = maxStone - resources['stone']
         if stoneToBuy < 0: stoneToBuy = 0
             
-        print("maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d" % (maxWood, woodToBuy, maxStone, stoneToBuy))
+        #print("maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d" % (maxWood, woodToBuy, maxStone, stoneToBuy))
 
         #Закупаем
         if woodToBuy > 0 or stoneToBuy >0:
@@ -113,6 +110,6 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
     #Вероятно потребуются еще закупки
     if (resources['wood'] + woodToBuy) < maxWood or (resources['stone'] + stoneToBuy) < maxStone:
         expectTime = int((MAX_GOLD - (resources['gold'] - woodToBuy*2 - stoneToBuy*2))/builder.getIncom('Ратуша')) + 1
-        if expectTime < 2: expectTime = 2
+        if expectTime < 1: expectTime = 1
         if expectTime > SAVE_MONEY_TIME: expectTime = SAVE_MONEY_TIME
         timer.setResTimer(expectTime,gold,wood,stone,food)
