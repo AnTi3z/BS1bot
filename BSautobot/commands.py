@@ -1,10 +1,10 @@
 import time
 
+from . import globalobjs
 from .globalobjs import *
 from . import builder
-from . import feeder
+from . import tools
 from . import timer
-from . import globalobjs
 
 def cmdParser(text):
     cmd, *params = text.split()
@@ -27,4 +27,4 @@ def cmdParser(text):
         else:
             if timer.feedTimerThread and timer.feedTimerThread.isAlive():
                 globalobjs.SendInfo_cb('\U0001f4ac Таймер на закупку еды уже запущен. Осталось %d\U0001f553 минут.' % int((timer.feedTimerStoptime - time.time())/60))
-            else: feeder.doBuyFood()
+            else: tools.doBuyFood()

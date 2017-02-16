@@ -36,6 +36,38 @@ def doBuyReses(wood=0, stone=0, food=0):
 
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
 
+def doBuyFood():
+    if resources['time'] < int(time.time()/60):
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.queThrdsLock.release()
+        #Запустить таймер на 5 секунд или time.sleep(5)
+        queues.cmdQueAdd(('feed',))
+        return
+
+    hrsReserv = FOOD_RESERV_TIME
+
+    foodConsum = (buildings['Дома']['lvl'] - min(buildings['Склад']['lvl'],buildings['Ферма']['lvl'])) * 10
+    foodReserv = foodConsum * hrsReserv * 60
+    storCapacity = (buildings['Склад']['lvl']*50 + 1000) * buildings['Склад']['lvl']
+    foodReserv = min(storCapacity, foodReserv)
+    foodNeed = foodReserv - resources['food']
+    #Необходимое количество еды
+    if foodNeed < 0: foodNeed = 0
+    #Если золота не хватает - покупаем еду на все деньги
+    elif foodNeed > resources['gold'] / 2:
+        foodNeed = int(resources['gold']/2)
+        foodReserv = foodNeed + resources['food']
+
+    #Покупка
+    doBuyReses(food=foodNeed)
+
+    #Корректировка времени на которое расчитан запас еды
+    if foodConsum * hrsReserv * 60 > foodReserv: hrsReserv = foodReserv / (foodConsum * 60)
+
+    #Следующая покупка через половину времени на которое у нас запас
+    if AUTOFEED: timer.setFeedTimer(int(hrsReserv*60/2))
+
 def doTargetReses(gold=0, wood=0, stone=0, food=0):
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
@@ -69,7 +101,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
         #Закупаемся максимум до MIN_GOLD
         moneyToSpend = resources['gold'] - MIN_GOLD
-        if moneyToSpend < 0: moneyToSpend = 0
+        moneyToSpend = max(moneyToSpend,0)
 
         #print("Money to spend: %d" % moneyToSpend)
 
@@ -91,14 +123,14 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if gold > MIN_GOLD:
             lastPeriod = int((gold - MIN_GOLD)/builder.getIncom('Ратуша'))
             maxWood = wood - lastPeriod * min(buildings['Лесопилка']['ppl'],buildings['Склад']['ppl'])
-            if maxWood < 0: maxWood = 0
+            maxWood = max(maxWood,0)
             maxStone = stone - lastPeriod * min(buildings['Шахта']['ppl'],buildings['Склад']['ppl'])
-            if maxStone < 0: maxStone = 0
+            maxStone = max(maxStone,0)
 
         if woodToBuy > 0 and resources['wood'] + woodToBuy > maxWood: woodToBuy = maxWood - resources['wood']
-        if woodToBuy < 0: woodToBuy = 0
+        woodToBuy = max(woodToBuy,0)
         if stoneToBuy > 0 and resources['stone'] + stoneToBuy > maxStone: stoneToBuy = maxStone - resources['stone']
-        if stoneToBuy < 0: stoneToBuy = 0
+        stoneToBuy = max(stoneToBuy,0)
             
         #print("maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d" % (maxWood, woodToBuy, maxStone, stoneToBuy))
 

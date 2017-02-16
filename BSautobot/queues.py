@@ -2,10 +2,9 @@ import threading
 import queue
 import time
 
-from . import builder
-from . import feeder
-from . import tools
 from . import globalobjs
+from . import builder
+from . import tools
 
 queThrdsLock = threading.Lock()
 cmdQueue = queue.Queue()
@@ -50,6 +49,6 @@ def cmdQueParse():
         else:
             builder.doUpgrade()
     elif cmd == 'feed':
-        feeder.doBuyFood()
+        tools.doBuyFood()
     elif cmd == 'reses':
         tools.doTargetReses(params[0], params[1], params[2])

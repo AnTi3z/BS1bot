@@ -3,7 +3,6 @@ import threading
 
 from . import globalobjs
 from . import builder
-from . import feeder
 from . import tools
 
 upgrTimerThread = None
@@ -26,7 +25,7 @@ def setFeedTimer(minutes):
     global feedTimerStoptime
 
     if feedTimerThread: feedTimerThread.cancel()
-    feedTimerThread = threading.Timer(minutes*60, feeder.doBuyFood)
+    feedTimerThread = threading.Timer(minutes*60, tools.doBuyFood)
     feedTimerThread.daemon = True
     feedTimerThread.start()
     feedTimerStoptime = time.time() + minutes*60

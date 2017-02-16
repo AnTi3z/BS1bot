@@ -16,13 +16,13 @@ def isResEnough(building):
 def getResNeed(building):
     cost = getUpgrCost(building)
     needGold = cost['gold'] - resources['gold']
+    needGold = max(needGold,0)
     needWood = cost['wood'] - resources['wood']
-    if needWood < 0: needWood = 0
+    needWood = max(needWood,0)
     needStone = cost['stone'] - resources['stone']
-    if needStone < 0: needStone = 0
+    needStone = max(needStone,0)
     total = needGold + needWood * 2 + needStone * 2
-    if total < 0: total = 0
-    if needGold < 0: needGold = 0
+    total = max(total,0)
     return {'gold' : needGold, 'wood' : needWood, 'stone' : needStone, 'total' : total}
 
 #Проверка что надо закупать лес или камни для апгрейда
@@ -232,9 +232,9 @@ def doUpgrade(building=None):
         if isResBuyingNeed(building):
             cost = getUpgrCost(building)
             woodNeed = cost['wood'] - resources['wood']
-            if woodNeed < 0: woodNeed = 0
+            woodNeed = max(woodNeed, 0)
             stoneNeed = cost['stone'] - resources['stone']
-            if stoneNeed < 0: stoneNeed = 0
+            stoneNeed = max(stoneNeed,0)
             tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
             queues.cmdQueAdd(('build', building))
             return
@@ -249,7 +249,8 @@ def doUpgrade(building=None):
             queues.msgQueAdd('Улучшить')
             #Отправляем в постройку людей(добавить проверки)
             if building != 'Ратуша' and building != 'Дома':
-                queues.msgQueAdd('Отправить')
+                if building == 'Казармы' or building == 'Стена': queues.msgQueAdd('Обучить')
+                else: queues.msgQueAdd('Отправить')
                 if building == 'Казармы': queues.msgQueAdd('40')
                 elif building == 'Требушет': queues.msgQueAdd('1')
                 else: queues.msgQueAdd('10')
