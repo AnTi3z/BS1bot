@@ -40,7 +40,7 @@ def main_loop(sender):  # name "example_function" and given parameters are defin
     try:
         while not quit:  # loop for messages
             msg = (yield)  # it waits until the generator has a has message here.
-            sender.status_online()  # so we will stay online.
+            #sender.status_online()  # so we will stay online.
             # (if we are offline it might not receive the messages instantly,
             #  but eventually we will get them)
             #print(msg)

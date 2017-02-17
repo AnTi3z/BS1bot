@@ -31,7 +31,7 @@ def doBuyReses(wood=0, stone=0, food=0):
         queues.msgQueAdd(str(food))
         queues.msgQueAdd('Назад')
 
-    queues.msgQueAdd('Наверх')
+    #queues.msgQueAdd('Наверх')
     queues.queThrdsLock.release()
 
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
