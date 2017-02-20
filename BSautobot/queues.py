@@ -52,3 +52,5 @@ def cmdQueParse():
         tools.doBuyFood()
     elif cmd == 'reses':
         tools.doTargetReses(params[0], params[1], params[2])
+    elif cmd == 'ppl':
+        tools.doAutoPpl()

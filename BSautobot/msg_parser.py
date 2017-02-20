@@ -25,6 +25,7 @@ def msgParser(text):
         if blds.group(10): buildings['Шахта']['lvl'] = int(blds.group(10)); buildings['Шахта']['ppl'] = int(blds.group(11))
         if blds.group(12): buildings['Казармы']['lvl'] = int(blds.group(12)); buildings['Казармы']['ppl'] = int(blds.group(13))
         if blds.group(14): buildings['Стена']['lvl'] = int(blds.group(14)); buildings['Стена']['ppl'] = int(blds.group(15))
+        buildings['time'] = int(time.time()/60)
 
     bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+?\n\n(?:Склад\s+(\d+))?[\s\S]+?Золото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
     if bld:
