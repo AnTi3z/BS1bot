@@ -16,13 +16,13 @@ def isResEnough(building):
 def getResNeed(building):
     cost = getUpgrCost(building)
     needGold = cost['gold'] - resources['gold']
-    needGold = max(needGold,0)
     needWood = cost['wood'] - resources['wood']
     needWood = max(needWood,0)
     needStone = cost['stone'] - resources['stone']
     needStone = max(needStone,0)
     total = needGold + needWood * 2 + needStone * 2
     total = max(total,0)
+    needGold = max(needGold,0)
     return {'gold' : needGold, 'wood' : needWood, 'stone' : needStone, 'total' : total}
 
 #Проверка что надо закупать лес или камни для апгрейда
