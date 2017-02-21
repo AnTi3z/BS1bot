@@ -2,6 +2,7 @@ import re
 import time
 
 from .globalobjs import *
+from . import tools
 
 #парсер сообщений от бота
 def msgParser(text):
@@ -67,3 +68,6 @@ def msgParser(text):
     if hall:
         buildings['Ратуша']['lvl'] = int(hall.group(1))
         resources['gold'] = int(hall.group(2))
+
+    if re.search(r"Твои владения атакованы!", text) or re.search(r"Осада началась!", text):
+        tools.doAutoPpl()
