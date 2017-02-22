@@ -159,7 +159,7 @@ def doAutoPpl():
 
     #Сначала заполняем казармы потом стену
     for bldRecep in ('Казармы','Стена'):
-        pplNeed = getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
+        pplNeed = builder.getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
         if pplNeed > 0:
             globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска.')
             #Свободными людьми
@@ -170,7 +170,7 @@ def doAutoPpl():
             #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
             for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
                 if pplNeed > 0:
-                    pplSend = min(pplNeed,buildings[bld]['ppl'])
+                    pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
                     if pplSend > 0:
                          builder.doRetPpl(bldDonor,pplSend)
                          builder.doSendPpl(bldRecep,pplSend)
@@ -181,14 +181,14 @@ def doAutoPpl():
     if buildings['Дома']['ppl'] > 0:
         globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
         for bld in ('Склад','Ферма','Шахта','Лесопилка','Требушет'):
-            pplNeed = getMaxPpl(bld) - buildings[bld]['ppl']
+            pplNeed = builder.getMaxPpl(bld) - buildings[bld]['ppl']
             if pplNeed > 0:
                 pplSend = min(pplNeed,buildings['Дома']['ppl'])
                 builder.doSendPpl(bld,pplSend)
                 pplNeed -= pplSend
                 buildings['Дома']['ppl'] -= pplSend
                 if buildings['Дома']['ppl'] <= 0: break
-                
+
 
     if buildings['Дома']['ppl'] <= 0:
         timer.setPplTimer(1)
