@@ -2,7 +2,8 @@ import re
 import time
 
 from .globalobjs import *
-from . import tools
+#from . import tools
+from . import timer
 
 #парсер сообщений от бота
 def msgParser(text):
@@ -70,4 +71,4 @@ def msgParser(text):
         resources['gold'] = int(hall.group(2))
 
     if re.search(r"Твои владения атакованы!", text) or re.search(r"Осада началась!", text):
-        tools.doAutoPpl()
+        timer.setPplTimer(1)

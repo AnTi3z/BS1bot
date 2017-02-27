@@ -17,7 +17,7 @@ def cmdParser(text):
             else: builder.doUpgrade(params[0])
         else:
             if timer.upgrTimerThread and timer.upgrTimerThread.isAlive():
-                globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд здания уже запущен. Осталось %d\U0001f553 минут.' % int((timer.upgrTimerStoptime - time.time())/60))
+                globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд %s уже запущен. Осталось %d\U0001f553 минут.' % (timer.upgrTimerBuilding,int((timer.upgrTimerStoptime - time.time())/60)))
             else: builder.doUpgrade()
     elif cmd == '!еда':
         if len(params) > 0:

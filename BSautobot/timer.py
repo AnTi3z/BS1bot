@@ -13,12 +13,14 @@ pplTimerThread = None
 def setUpgrTimer(minutes, bld):
     global upgrTimerThread
     global upgrTimerStoptime
+    global upgrTimerBuilding
 
     if upgrTimerThread: upgrTimerThread.cancel()
     upgrTimerThread = threading.Timer(minutes*60, builder.doUpgrade, args=[bld])
     upgrTimerThread.daemon = True
     upgrTimerThread.start()
     upgrTimerStoptime = time.time() + minutes*60
+    upgrTimerBuilding = bld
     globalobjs.SendInfo_cb('\U0001f553 Таймер на апгрейд %s установлен на %d\U0001f553 минут.' % (bld,minutes))
 
 def setFeedTimer(minutes):

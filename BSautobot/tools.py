@@ -146,7 +146,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if expectTime > SAVE_MONEY_TIME: expectTime = SAVE_MONEY_TIME
         timer.setResTimer(expectTime,gold,wood,stone,food)
 
-def doAutoPpl():
+def doAutoPpl(retire=True):
     #Обновить информацию о людях если требуется
     if buildings['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
@@ -157,39 +157,42 @@ def doAutoPpl():
         queues.cmdQueAdd(('ppl',))
         return
 
+    pplHome = buildings['Дома']['ppl']
     #Сначала заполняем казармы потом стену
     for bldRecep in ('Казармы','Стена'):
         pplNeed = builder.getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
         if pplNeed > 0:
             globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска.')
             #Свободными людьми
-            pplSend = min(pplNeed,buildings['Дома']['ppl'])
+            pplSend = min(pplNeed,pplHome)
             builder.doSendPpl(bldRecep,pplSend)
             pplNeed -= pplSend
-            buildings['Дома']['ppl'] -= pplSend
-            #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
-            for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
-                if pplNeed > 0:
-                    pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
-                    if pplSend > 0:
-                         builder.doRetPpl(bldDonor,pplSend)
-                         builder.doSendPpl(bldRecep,pplSend)
-                         pplNeed -= pplSend
-                         buildings[bldDonor]['ppl'] -= pplSend
-                else: break
+            pplHome -= pplSend
+            if retire:
+                #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
+                for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
+                    if pplNeed > 0:
+                        pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
+                        if pplSend > 0:
+                            builder.doRetPpl(bldDonor,pplSend)
+                            builder.doSendPpl(bldRecep,pplSend)
+                            pplNeed -= pplSend
+                            buildings[bldDonor]['ppl'] -= pplSend
+                    else: break
 
-    if buildings['Дома']['ppl'] > 0:
+    #Отправляем людей на производства
+    if pplHome > 0:
         globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
         for bld in ('Склад','Ферма','Шахта','Лесопилка','Требушет'):
             pplNeed = builder.getMaxPpl(bld) - buildings[bld]['ppl']
             if pplNeed > 0:
-                pplSend = min(pplNeed,buildings['Дома']['ppl'])
+                pplSend = min(pplNeed,pplHome)
                 builder.doSendPpl(bld,pplSend)
                 pplNeed -= pplSend
-                buildings['Дома']['ppl'] -= pplSend
-                if buildings['Дома']['ppl'] <= 0: break
+                pplHome -= pplSend
+                if pplHome <= 0: break
 
 
-    if buildings['Дома']['ppl'] <= 0:
+    if pplHome <= 0:
         timer.setPplTimer(1)
         #Если свободных людей 0 - запускаем таймер на 1 минуту
