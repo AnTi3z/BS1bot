@@ -8,15 +8,19 @@ from . import timer
 #парсер сообщений от бота
 def msgParser(text):
 
+    #Наверх и ...-Торговля
     res = re.search(r"(?:Жители\s+(\d+).\n)?(?:Армия\s+(\d+).\n)?Золото\s+(\d+).\nДерево\s+(\d+).\nКамень\s+(\d+).\nЕда\s+(\d+).", text)
     if res:
         if res.group(1): buildings['Дома']['ppl'] = int(res.group(1))
+        if res.group(2): buildings['Казармы']['ppl'] = int(res.group(2))
         resources['gold'] = int(res.group(3))
         resources['wood'] = int(res.group(4))
         resources['stone'] = int(res.group(5))
         resources['food'] = int(res.group(6))
         resources['time'] = int(time.time()/60)
+        return
 
+    #...-Постройки
     blds = re.search(r"^Постройки\n\n(?:\U0001f3e4\s+(\d+).+\n)?(?:\U0001f3da\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f3d8\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f33b\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f332\s+(\d+).+\s+(\d+)/.+\n)?(?:\u26cf\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f6e1\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f3f0\s+(\d+).+\s+(\d+)/.+\n)?\nЧто будем строить\?$", text)
     if blds:
         if blds.group(1): buildings['Ратуша']['lvl'] = int(blds.group(1))
@@ -28,8 +32,10 @@ def msgParser(text):
         if blds.group(12): buildings['Казармы']['lvl'] = int(blds.group(12)); buildings['Казармы']['ppl'] = int(blds.group(13))
         if blds.group(14): buildings['Стена']['lvl'] = int(blds.group(14)); buildings['Стена']['ppl'] = int(blds.group(15))
         buildings['time'] = int(time.time()/60)
+        return
 
-    bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+?\n\n(?:Склад\s+(\d+))?[\s\S]+?Золото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
+    #...-Постройки-Лесопилка,Шахта,Ферма,Склад
+    bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+).+?\n\n(?:Склад\s+(\d+))?.+?Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
     if bld:
         build = bld.group(1)
 
@@ -38,37 +44,67 @@ def msgParser(text):
         if bld.group(4): buildings['Склад']['ppl'] = int(bld.group(4))
         resources['gold'] = int(bld.group(5))
         buildings['Дома']['ppl'] = int(bld.group(6))
+        return
 
-    wall = re.search(r"^.Стена\s*\n\nУровень\s+(\d+)\nЛучники\s+(\d+)[\s\S]+\nПрочность\s+(\d+).+\n\nЗолото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
+    #...-Постройки-Дома
+    hous = re.search(r"^.Дома\s*\n\nУровень\s+(\d+)\nЖители\s+(\d+).+?Склад\s+(\d+).+", text, re.S)
+    if hous:
+        buildings['Дома']['lvl'] = int(hous.group(1))
+        buildings['Дома']['ppl'] = int(hous.group(2))
+        buildings['Склад']['ppl'] = int(hous.group(3))
+        return
+
+    #...-Постройки-Ратуша
+    hall = re.search(r"^.Ратуша\s*\n\nУровень\s+(\d+)\nЗолото\s+(\d+).+", text, re.S)
+    if hall:
+        buildings['Ратуша']['lvl'] = int(hall.group(1))
+        resources['gold'] = int(hall.group(2))
+        return
+
+    #...-Постройки-Стена
+    wall = re.search(r"^.Стена\s+Уровень\s+(\d+)\nЛучники\s+(\d+).+Прочность\s+(\d+).+Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
     if wall:
         buildings['Стена']['lvl'] = int(wall.group(1))
         buildings['Стена']['ppl'] = int(wall.group(2))
         buildings['Стена']['str'] = int(wall.group(3))
         resources['gold'] = int(wall.group(4))
         buildings['Дома']['ppl'] = int(wall.group(5))
+        return
 
-    treb = re.search(r"^.Требушет\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+)[\s\S]+\n\nЗолото\s+(\d+).\nЖители\s+(\d+)[\s\S]+", text)
+    #...-Постройки-Казармы
+    #...-Война
+    war = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.Стена\s+\nПрочность\s+(\d+).+?\nЛучники\s+(\d+)\S+\n\n)?(?:.Требушет\s+\nРабочие\s+(\d+)\S+\n\n)?.+?Армия\s+(\d+).+Еда\s+(\d+)\S+?\n?(?:\nСледующая атака\s+(\d+)\sмин.)?(?:\nБез нападений\s+(\d+)\sмин.)?(\nПрод)?.*", text, re.S)
+    if war:
+        if war.group(1): pass #Карма
+        if war.group(2): buildings['Стена']['str'] = int(war.group(2))
+        if war.group(3): buildings['Стена']['ppl'] = int(war.group(3))
+        if war.group(4): buildings['Требушет']['ppl'] = int(war.group(4))
+        buildings['Казармы']['ppl'] = int(war.group(5))
+        resources['food'] = int(war.group(6))
+        if war.group(7): pass #atck cooldown = war.group(7)
+        if war.group(8): pass #imune = war.group(8)
+        if war.group(9): pass #battle = True
+        return
+
+    #...-Мастерская
+    treb = re.search(r"^Мастерская\n\n.Требушет\s+(\d+).+?(\d+).+", text)
+    if treb:
+        buildings['Требушет']['lvl'] = int(treb.group(1))
+        buildings['Требушет']['ppl'] = int(treb.group(2))
+        return
+
+    #...-Мастерская-Требушет
+    treb = re.search(r"^.Требушет\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+).+Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
     if treb:
         buildings['Требушет']['lvl'] = int(treb.group(1))
         buildings['Требушет']['ppl'] = int(treb.group(2))
         resources['gold'] = int(treb.group(3))
         buildings['Дома']['ppl'] = int(treb.group(4))
+        return
 
-    treb = re.search(r"^Мастерская\n\n.Требушет\s+(\d+).+?(\d+).+", text)
-    if treb:
-        buildings['Требушет']['lvl'] = int(treb.group(1))
-        buildings['Требушет']['ppl'] = int(treb.group(2))
-
-    hous = re.search(r"^.Дома\s*\n\nУровень\s+(\d+)\nЖители\s+(\d+)[\s\S]+?Склад\s+(\d+)", text)
-    if hous:
-        buildings['Дома']['lvl'] = int(hous.group(1))
-        buildings['Дома']['ppl'] = int(hous.group(2))
-        buildings['Склад']['ppl'] = int(hous.group(3))
-
-    hall = re.search(r"^.Ратуша\s*\n\nУровень\s+(\d+)\nЗолото\s+(\d+)", text)
-    if hall:
-        buildings['Ратуша']['lvl'] = int(hall.group(1))
-        resources['gold'] = int(hall.group(2))
-
+    #Начало сражения
     if re.search(r"Твои владения атакованы!", text) or re.search(r"Осада началась!", text):
         timer.setPplTimer(1)
+        return
+
+    #Окончание сражения
