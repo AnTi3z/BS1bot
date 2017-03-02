@@ -34,8 +34,8 @@ def msgParser(text):
         buildings['time'] = int(time.time()/60)
         return
 
-    #...-Постройки-Лесопилка,Шахта,Ферма,Склад
-    bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад)\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+).+?\n\n(?:Склад\s+(\d+))?.+?Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
+    #...-Постройки-Лесопилка,Шахта,Ферма,Склад,Казармы | ...-Мастерская-Требушет
+    bld = re.search(r"^.(Лесопилка|Шахта|Ферма|Склад|Требушет|Казармы)\s*\n\nУровень\s+(\d+)\n(?:Рабочие|Армия)\s+(\d+).+?\n\n(?:Склад\s+(\d+))?.+?Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
     if bld:
         build = bld.group(1)
 
@@ -71,7 +71,6 @@ def msgParser(text):
         buildings['Дома']['ppl'] = int(wall.group(5))
         return
 
-    #...-Постройки-Казармы
     #...-Война
     war = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.Стена\s+\nПрочность\s+(\d+).+?\nЛучники\s+(\d+)\S+\n\n)?(?:.Требушет\s+\nРабочие\s+(\d+)\S+\n\n)?.+?Армия\s+(\d+).+Еда\s+(\d+)\S+?\n?(?:\nСледующая атака\s+(\d+)\sмин.)?(?:\nБез нападений\s+(\d+)\sмин.)?(\nПрод)?.*", text, re.S)
     if war:
@@ -91,15 +90,6 @@ def msgParser(text):
     if treb:
         buildings['Требушет']['lvl'] = int(treb.group(1))
         buildings['Требушет']['ppl'] = int(treb.group(2))
-        return
-
-    #...-Мастерская-Требушет
-    treb = re.search(r"^.Требушет\s*\n\nУровень\s+(\d+)\nРабочие\s+(\d+).+Золото\s+(\d+).\nЖители\s+(\d+).+", text, re.S)
-    if treb:
-        buildings['Требушет']['lvl'] = int(treb.group(1))
-        buildings['Требушет']['ppl'] = int(treb.group(2))
-        resources['gold'] = int(treb.group(3))
-        buildings['Дома']['ppl'] = int(treb.group(4))
         return
 
     #Начало сражения
