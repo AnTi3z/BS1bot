@@ -1,6 +1,9 @@
+#!/usr/local/bin/python
+
 from pytg.receiver import Receiver  # get messages
 from pytg.sender import Sender  # send messages, and other querys.
 from pytg.utils import coroutine
+from pytg import Telegram
 from functools import partial
 
 import BSautobot
@@ -8,11 +11,14 @@ import BSautobot
 BS_ID = 252148344
 
 def main():
+    tg = Telegram(telegram="/usr/local/bin/telegram-cli", pubkey_file="/usr/local/etc/telegram-cli/tg-server.pub", port=4458)
     # get a Receiver instance, to get messages.
-    receiver = Receiver(host="localhost", port=4458)
+    #receiver = Receiver(host="localhost", port=4458)
+    receiver = tg.receiver
 
     # get a Sender instance, to send messages, and other querys.
-    sender = Sender(host="localhost", port=4458)
+    #sender = Sender(host="localhost", port=4458)
+    sender = tg.sender
 
     # start the Receiver, so we can get messages!
     receiver.start()  # note that the Sender has no need for a start function.
@@ -30,7 +36,7 @@ def main():
     # the sender will disconnect after each send, so there is no need to stop it.
     # if you want to shutdown the telegram cli:
     # sender.safe_quit() # this shuts down the telegram cli.
-    # sender.quit() # this shuts down the telegram cli, without waiting for downloads to complete.
+    sender.quit() # this shuts down the telegram cli, without waiting for downloads to complete.
 
 
 # this is the function which will process our incoming messages
