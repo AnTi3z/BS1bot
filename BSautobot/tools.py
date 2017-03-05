@@ -91,10 +91,10 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if gold > resources['gold']: timetoGold = int((gold - resources['gold'])/builder.getIncom('Ратуша'))
         else: timetoGold = 0
         #Оставшееся время до накопления необходимого количества дерева
-        if wood > resources['wood']: timetoWood = int((wood - resources['wood'])/min(buildings['Лесопилка']['ppl'],buildings['Склад']['ppl']))
+        if wood > resources['wood']: timetoWood = int((wood - resources['wood'])/min(buildings['Лесопилка']['lvl'],buildings['Склад']['lvl']))
         else: timetoWood = 0
         #Оставшееся время до накопления необходимого количества камня
-        if stone > resources['stone']: timetoStone = int((stone - resources['stone'])/min(buildings['Шахта']['ppl'],buildings['Склад']['ppl']))
+        if stone > resources['stone']: timetoStone = int((stone - resources['stone'])/min(buildings['Шахта']['lvl'],buildings['Склад']['lvl']))
         else: timetoStone = 0
 
         #print("timetoGold: %d; timetoWood: %d; timetoStone: %d" % (timetoGold, timetoWood, timetoStone))
@@ -122,9 +122,9 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         #Проверяем что закупаем не слишком много
         if gold > MIN_GOLD:
             lastPeriod = int((gold - MIN_GOLD)/builder.getIncom('Ратуша'))
-            maxWood = wood - lastPeriod * min(buildings['Лесопилка']['ppl'],buildings['Склад']['ppl'])
+            maxWood = wood - lastPeriod * min(buildings['Лесопилка']['lvl'],buildings['Склад']['lvl'])
             maxWood = max(maxWood,0)
-            maxStone = stone - lastPeriod * min(buildings['Шахта']['ppl'],buildings['Склад']['ppl'])
+            maxStone = stone - lastPeriod * min(buildings['Шахта']['lvl'],buildings['Склад']['lvl'])
             maxStone = max(maxStone,0)
 
         if woodToBuy > 0 and resources['wood'] + woodToBuy > maxWood: woodToBuy = maxWood - resources['wood']
