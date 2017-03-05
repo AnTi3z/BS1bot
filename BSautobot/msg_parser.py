@@ -1,9 +1,12 @@
 import re
 import time
+import logging
 
 from .globalobjs import *
 #from . import tools
 from . import timer
+
+logger = logging.getLogger(__name__)
 
 #парсер сообщений от бота
 def msgParser(text):
@@ -18,6 +21,7 @@ def msgParser(text):
         resources['stone'] = int(res.group(5))
         resources['food'] = int(res.group(6))
         resources['time'] = int(time.time()/60)
+        logger.debug("res: %s" % str(res.groups()))
         return
 
     #...-Постройки
@@ -32,6 +36,7 @@ def msgParser(text):
         if blds.group(12): buildings['Казармы']['lvl'] = int(blds.group(12)); buildings['Казармы']['ppl'] = int(blds.group(13))
         if blds.group(14): buildings['Стена']['lvl'] = int(blds.group(14)); buildings['Стена']['ppl'] = int(blds.group(15))
         buildings['time'] = int(time.time()/60)
+        logger.debug("blds: %s" % str(blds.groups()))
         return
 
     #...-Постройки-Лесопилка,Шахта,Ферма,Склад,Казармы | ...-Мастерская-Требушет
@@ -44,6 +49,7 @@ def msgParser(text):
         if bld.group(4): buildings['Склад']['ppl'] = int(bld.group(4))
         resources['gold'] = int(bld.group(5))
         buildings['Дома']['ppl'] = int(bld.group(6))
+        logger.debug("bld: %s" % str(bld.groups()))
         return
 
     #...-Постройки-Дома
@@ -52,6 +58,7 @@ def msgParser(text):
         buildings['Дома']['lvl'] = int(hous.group(1))
         buildings['Дома']['ppl'] = int(hous.group(2))
         buildings['Склад']['ppl'] = int(hous.group(3))
+        logger.debug("hous: %s" % str(hous.groups()))
         return
 
     #...-Постройки-Ратуша
@@ -59,6 +66,7 @@ def msgParser(text):
     if hall:
         buildings['Ратуша']['lvl'] = int(hall.group(1))
         resources['gold'] = int(hall.group(2))
+        logger.debug("hall: %s" % str(hall.groups()))
         return
 
     #...-Постройки-Стена
@@ -69,6 +77,7 @@ def msgParser(text):
         buildings['Стена']['str'] = int(wall.group(3))
         resources['gold'] = int(wall.group(4))
         buildings['Дома']['ppl'] = int(wall.group(5))
+        logger.debug("wall: %s" % str(wall.groups()))
         return
 
     #...-Война
@@ -83,6 +92,7 @@ def msgParser(text):
         if war.group(7): pass #atck cooldown = war.group(7)
         if war.group(8): pass #imune = war.group(8)
         if war.group(9): pass #battle = True
+        logger.debug("war: %s" % str(war.groups()))
         return
 
     #...-Мастерская
@@ -90,11 +100,13 @@ def msgParser(text):
     if treb:
         buildings['Требушет']['lvl'] = int(treb.group(1))
         buildings['Требушет']['ppl'] = int(treb.group(2))
+        logger.debug("treb: %s" % str(treb.groups()))
         return
 
     #Начало сражения
     if re.search(r"Твои владения атакованы!", text) or re.search(r"Осада началась!", text):
         timer.setPplTimer(1)
+        logger.debug("Сражение началось!")
         return
 
     #Окончание сражения
