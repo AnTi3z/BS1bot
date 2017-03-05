@@ -80,9 +80,18 @@ def msgParser(text):
         if war.group(4): buildings['Требушет']['ppl'] = int(war.group(4))
         buildings['Казармы']['ppl'] = int(war.group(5))
         resources['food'] = int(war.group(6))
-        if war.group(7): pass #atck cooldown = war.group(7)
-        if war.group(8): pass #imune = war.group(8)
-        if war.group(9): pass #battle = True
+        if war.group(7): pass #cooldown = time.time() + 60*war.group(7)
+        if war.group(8): pass #imune = time.time() + 60*war.group(8)
+        if war.group(9): pass #war.battle = True else: war.battle = False
+        #war.battle = not (war.group(9) == None)
+        return
+
+    #...-Война-Обучить
+    army = re.search(r"^.Инфо\s+\n\n(?:.Казармы\s+(\d+).+\n?)?(?:.Стена\s+(\d+).+\n?)?(?:.Требушет\s+(\d+).+)?", text)
+    if army:
+        if army.group(1): buildings['Казармы']['ppl'] = int(army.group(1))
+        if army.group(2): buildings['Стена']['ppl'] = int(army.group(2))
+        if army.group(3): buildings['Требушет']['ppl'] = int(army.group(3))
         return
 
     #...-Мастерская
@@ -92,9 +101,22 @@ def msgParser(text):
         buildings['Требушет']['ppl'] = int(treb.group(2))
         return
 
-    #Начало сражения
-    if re.search(r"Твои владения атакованы!", text) or re.search(r"Осада началась!", text):
+    #Нас атаковали
+    if re.search(r"Твои владения атакованы!", text):
+        #war.battle = True
+        #war.imune = time.time() + 3600
+        timer.setPplTimer(1)
+        return
+
+    #Мы атаковали
+    if re.search(r"Осада началась!", text):
+        #war.battle = True
+        #war.cooldown = time.time() + 600
         timer.setPplTimer(1)
         return
 
     #Окончание сражения
+    if re.search(r".Битва.+окончена.+", text):
+        #war.battle = False
+        #Перезапустить апгрейд
+        return
