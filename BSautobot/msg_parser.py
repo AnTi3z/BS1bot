@@ -4,6 +4,8 @@ import time
 from .globalobjs import *
 #from . import tools
 from . import timer
+from . import builder
+from . import war
 
 #парсер сообщений от бота
 def msgParser(text):
@@ -72,18 +74,19 @@ def msgParser(text):
         return
 
     #...-Война
-    war = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.Стена\s+\nПрочность\s+(\d+).+?\nЛучники\s+(\d+)\S+\n\n)?(?:.Требушет\s+\nРабочие\s+(\d+)\S+\n\n)?.+?Армия\s+(\d+).+Еда\s+(\d+)\S+?\n?(?:\nСледующая атака\s+(\d+)\sмин.)?(?:\nБез нападений\s+(\d+)\sмин.)?(\nПрод)?.*", text, re.S)
-    if war:
-        if war.group(1): pass #Карма
-        if war.group(2): buildings['Стена']['str'] = int(war.group(2))
-        if war.group(3): buildings['Стена']['ppl'] = int(war.group(3))
-        if war.group(4): buildings['Требушет']['ppl'] = int(war.group(4))
-        buildings['Казармы']['ppl'] = int(war.group(5))
-        resources['food'] = int(war.group(6))
-        if war.group(7): pass #cooldown = time.time() + 60*war.group(7)
-        if war.group(8): pass #imune = time.time() + 60*war.group(8)
-        if war.group(9): pass #war.battle = True else: war.battle = False
-        #war.battle = not (war.group(9) == None)
+    batl = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.Стена\s+\nПрочность\s+(\d+).+?\nЛучники\s+(\d+)\S+\n\n)?(?:.Требушет\s+\nРабочие\s+(\d+)\S+\n\n)?.+?Армия\s+(\d+).+Еда\s+(\d+)\S+?\n?(?:\nСледующая атака\s+(\d+)\sмин.)?(?:\nБез нападений\s+(\d+)\sмин.)?(\nПрод)?.*", text, re.S)
+    if batl:
+        if batl.group(1): pass #Карма
+        if batl.group(2): buildings['Стена']['str'] = int(batl.group(2))
+        if batl.group(3): buildings['Стена']['ppl'] = int(batl.group(3))
+        if batl.group(4): buildings['Требушет']['ppl'] = int(batl.group(4))
+        buildings['Казармы']['ppl'] = int(batl.group(5))
+        resources['food'] = int(batl.group(6))
+        if batl.group(7): war.cooldown = time.time() + 60*int(batl.group(7))
+        else: war.cooldown = None
+        if batl.group(8): war.imune = time.time() + 60*int(batl.group(8))
+        else: war.imune = None
+        war.battle = not (batl.group(9) == None)
         return
 
     #...-Война-Обучить
@@ -103,20 +106,23 @@ def msgParser(text):
 
     #Нас атаковали
     if re.search(r"Твои владения атакованы!", text):
-        #war.battle = True
-        #war.imune = time.time() + 3600
+        war.battle = True
+        war.imune = time.time() + 3600 #60 минут (TODO: 30 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
+        #Запустить на 1 минуту таймер ремонта стены
         return
 
     #Мы атаковали
     if re.search(r"Осада началась!", text):
-        #war.battle = True
-        #war.cooldown = time.time() + 600
+        war.battle = True
+        war.cooldown = time.time() + 600 #10 минут (TODO: 5 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
         return
 
     #Окончание сражения
     if re.search(r".Битва.+окончена.+", text):
-        #war.battle = False
+        war.battle = False
+        #Обновить время имуна и кд через меню войны
         #Перезапустить апгрейд
+        if timer.upgrTimerThread: builder.doUpgrade(timer.upgrTimerBuilding)
         return

@@ -4,6 +4,7 @@ import threading
 from . import globalobjs
 from . import builder
 from . import tools
+from . import war
 
 upgrTimerThread = None
 feedTimerThread = None
@@ -53,7 +54,8 @@ def setPplTimer(minutes):
     global pplTimerStoptime
 
     if pplTimerThread: pplTimerThread.cancel()
-    pplTimerThread = threading.Timer(minutes*60, tools.doAutoPpl)
+    retire = not war.imune and not war.battle #Забираем с производства людей, если нет имуна и не идет бой
+    pplTimerThread = threading.Timer(minutes*60, tools.doAutoPpl, args=[retire])
     pplTimerThread.daemon = True
     pplTimerThread.start()
     pplTimerStoptime = time.time() + minutes*60

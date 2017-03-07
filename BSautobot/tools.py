@@ -5,7 +5,7 @@ from .globalobjs import *
 from . import queues
 from . import builder
 from . import timer
-
+from . import war
 
 def doBuyReses(wood=0, stone=0, food=0):
     if wood == 0 and stone == 0 and food == 0: return
@@ -37,6 +37,11 @@ def doBuyReses(wood=0, stone=0, food=0):
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
 
 def doBuyFood():
+    #Если идет бой, откладываем таймер на 1 минуту
+    if war.battle:
+        timer.setFeedTimer(1)
+        return
+    
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
@@ -69,6 +74,11 @@ def doBuyFood():
     if AUTOFEED: timer.setFeedTimer(int(hrsReserv*60/2))
 
 def doTargetReses(gold=0, wood=0, stone=0, food=0):
+    #Если идет бой, откладываем таймер на 1 минуту
+    if war.battle:
+        timer.setResTimer(1,gold,wood,stone,food)
+        return
+    
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')

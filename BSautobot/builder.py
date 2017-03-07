@@ -6,6 +6,7 @@ from .globalobjs import *
 from . import tools
 from . import queues
 from . import timer
+from . import war
 
 #Проверка что ресурсов хватает на апгрейд
 def isResEnough(building):
@@ -219,6 +220,11 @@ def getNextUpgrBld():
 #Проапгрейдить здание
 def doUpgrade(building=None):
     building = building or getNextUpgrBld()
+
+    #Если идет бой, откладываем таймер на 1 минуту
+    if war.battle:
+        timer.setUpgrTimer(1,building)
+        return
 
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
