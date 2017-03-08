@@ -7,6 +7,7 @@ from .globalobjs import *
 from . import timer
 from . import builder
 from . import war
+from . import queues
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,12 @@ def msgParser(text):
     #Окончание сражения
     if re.search(r".Битва.+окончена.+", text):
         war.battle = False
+        #Обновить информацию об имеющейся голде
         #Обновить время имуна и кд через меню войны
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.msgQueAdd('Война')
+        queues.queThrdsLock.release()
         #Перезапустить апгрейд
-        if timer.upgrTimerThread: builder.doUpgrade(timer.upgrTimerBuilding)
+        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding))
         return

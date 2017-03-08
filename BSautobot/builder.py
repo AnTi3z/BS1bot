@@ -224,9 +224,9 @@ def getNextUpgrBld():
 def doUpgrade(building=None):
     building = building or getNextUpgrBld()
 
-    #Если идет бой, откладываем таймер на 1 минуту
+    #Если идет бой, откладываем таймер на 5 минут(после окончания боя таймер автоматически перезапустится)
     if war.battle:
-        timer.setUpgrTimer(1,building)
+        timer.setUpgrTimer(5,building)
         return
 
     if resources['time'] < int(time.time()/60):
