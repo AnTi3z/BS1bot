@@ -1,7 +1,8 @@
 #!/usr/local/bin/python
 
-from pytg.receiver import Receiver  # get messages
-from pytg.sender import Sender  # send messages, and other querys.
+import logging
+#from pytg.receiver import Receiver  # get messages
+#from pytg.sender import Sender  # send messages, and other querys.
 from pytg.utils import coroutine
 from pytg import Telegram
 from functools import partial
@@ -9,6 +10,9 @@ from functools import partial
 import BSautobot
 
 BS_ID = 252148344
+
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("BSautobot").setLevel(logging.DEBUG)
 
 def main():
     tg = Telegram(telegram="/usr/local/bin/telegram-cli", pubkey_file="/usr/local/etc/telegram-cli/tg-server.pub", port=4458)

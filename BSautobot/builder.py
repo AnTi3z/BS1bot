@@ -1,5 +1,6 @@
 import math
 import time
+import logging
 
 from . import globalobjs
 from .globalobjs import *
@@ -7,6 +8,8 @@ from . import tools
 from . import queues
 from . import timer
 from . import war
+
+logger = logging.getLogger(__name__)
 
 #Проверка что ресурсов хватает на апгрейд
 def isResEnough(building):
