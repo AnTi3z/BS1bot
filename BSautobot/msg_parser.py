@@ -24,7 +24,7 @@ def msgParser(text):
         resources['stone'] = int(res.group(5))
         resources['food'] = int(res.group(6))
         resources['time'] = int(time.time()/60)
-        logger.debug("res: %s" % str(res.groups()))
+        logger.debug("res: %s",str(res.groups()))
         return
 
     #...-Постройки
@@ -39,7 +39,7 @@ def msgParser(text):
         if blds.group(12): buildings['Казармы']['lvl'] = int(blds.group(12)); buildings['Казармы']['ppl'] = int(blds.group(13))
         if blds.group(14): buildings['Стена']['lvl'] = int(blds.group(14)); buildings['Стена']['ppl'] = int(blds.group(15))
         buildings['time'] = int(time.time()/60)
-        logger.debug("blds: %s" % str(blds.groups()))
+        logger.debug("blds: %s",str(blds.groups()))
         return
 
     #...-Постройки-Лесопилка,Шахта,Ферма,Склад,Казармы | ...-Мастерская-Требушет
@@ -52,7 +52,7 @@ def msgParser(text):
         if bld.group(4): buildings['Склад']['ppl'] = int(bld.group(4))
         resources['gold'] = int(bld.group(5))
         buildings['Дома']['ppl'] = int(bld.group(6))
-        logger.debug("bld: %s" % str(bld.groups()))
+        logger.debug("bld: %s",str(bld.groups()))
         return
 
     #...-Постройки-Дома
@@ -61,7 +61,7 @@ def msgParser(text):
         buildings['Дома']['lvl'] = int(hous.group(1))
         buildings['Дома']['ppl'] = int(hous.group(2))
         buildings['Склад']['ppl'] = int(hous.group(3))
-        logger.debug("hous: %s" % str(hous.groups()))
+        logger.debug("hous: %s",str(hous.groups()))
         return
 
     #...-Постройки-Ратуша
@@ -69,7 +69,7 @@ def msgParser(text):
     if hall:
         buildings['Ратуша']['lvl'] = int(hall.group(1))
         resources['gold'] = int(hall.group(2))
-        logger.debug("hall: %s" % str(hall.groups()))
+        logger.debug("hall: %s",str(hall.groups()))
         return
 
     #...-Постройки-Стена
@@ -80,7 +80,7 @@ def msgParser(text):
         buildings['Стена']['str'] = int(wall.group(3))
         resources['gold'] = int(wall.group(4))
         buildings['Дома']['ppl'] = int(wall.group(5))
-        logger.debug("wall: %s" % str(wall.groups()))
+        logger.debug("wall: %s",str(wall.groups()))
         return
 
     #...-Война
@@ -97,7 +97,7 @@ def msgParser(text):
         if batl.group(8): war.imune = time.time() + 60*int(batl.group(8))
         else: war.imune = None
         war.battle = not (batl.group(9) == None)
-        logger.debug("batl: %s" % str(batl.groups()))
+        logger.debug("batl: %s",str(batl.groups()))
         return
 
     #...-Война-Обучить
@@ -106,7 +106,7 @@ def msgParser(text):
         if army.group(1): buildings['Казармы']['ppl'] = int(army.group(1))
         if army.group(2): buildings['Стена']['ppl'] = int(army.group(2))
         if army.group(3): buildings['Требушет']['ppl'] = int(army.group(3))
-        logger.debug("army: %s" % str(army.groups()))
+        logger.debug("army: %s",str(army.groups()))
         return
 
     #...-Мастерская
@@ -114,27 +114,30 @@ def msgParser(text):
     if treb:
         buildings['Требушет']['lvl'] = int(treb.group(1))
         buildings['Требушет']['ppl'] = int(treb.group(2))
-        logger.debug("treb: %s" % str(treb.groups()))
+        logger.debug("treb: %s",str(treb.groups()))
         return
 
     #Нас атаковали
     if re.search(r"Твои владения атакованы!", text):
+        logger.info("Нас атаковали!")
         war.battle = True
         war.imune = time.time() + 3600 #60 минут (TODO: 30 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
-        #Запустить на 1 минуту таймер ремонта стены
+        logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
 
     #Мы атаковали
     if re.search(r"Осада началась!", text):
+        logger.info("Сражение началось!")
         war.battle = True
         war.cooldown = time.time() + 600 #10 минут (TODO: 5 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
-        logger.debug("Сражение началось!")
+        logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
 
     #Окончание сражения
     if re.search(r".Битва.+окончена.+", text):
+        logger.info("Сражение окончилось!")
         war.battle = False
         #Обновить информацию об имеющейся голде
         #Обновить время имуна и кд через меню войны
@@ -144,4 +147,5 @@ def msgParser(text):
         queues.queThrdsLock.release()
         #Перезапустить апгрейд
         if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding))
+        logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
