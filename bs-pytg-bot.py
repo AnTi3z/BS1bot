@@ -33,15 +33,19 @@ def main():
     # continues here, after exiting the while loop in example_function()
 
     # please, no more messages. (we could stop the the cli too, with sender.safe_quit() )
+    sender.terminate()
     receiver.stop()
-
-    print("I am done!")
+    #tg.stop_cli()
 
     # the sender will disconnect after each send, so there is no need to stop it.
     # if you want to shutdown the telegram cli:
     # sender.safe_quit() # this shuts down the telegram cli.
-    sender.quit() # this shuts down the telegram cli, without waiting for downloads to complete.
+    # sender.quit() # this shuts down the telegram cli, without waiting for downloads to complete.
+    sender.terminate()
+    receiver.stop()
+    #tg.stop_cli()
 
+    print("I am done!")
 
 # this is the function which will process our incoming messages
 @coroutine
