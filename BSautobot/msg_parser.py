@@ -146,6 +146,6 @@ def msgParser(text):
         queues.msgQueAdd('Война')
         queues.queThrdsLock.release()
         #Перезапустить апгрейд
-        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding))
+        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return

@@ -221,12 +221,14 @@ def getNextUpgrBld():
 
 
 #Проапгрейдить здание
-def doUpgrade(building=None):
+def doUpgrade(building=None, repeat=None):
+    if not building: repeat = None
+    if repeat: repeat = int(repeat)
     building = building or getNextUpgrBld()
 
     #Если идет бой, откладываем таймер на 5 минут(после окончания боя таймер автоматически перезапустится)
     if war.battle:
-        timer.setUpgrTimer(5,building)
+        timer.setUpgrTimer(5,building,repeat)
         return
 
     if resources['time'] < int(time.time()/60):
@@ -234,7 +236,7 @@ def doUpgrade(building=None):
         queues.msgQueAdd('Наверх')
         queues.queThrdsLock.release()
         #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('build', building))
+        queues.cmdQueAdd(('build', building, repeat))
         return
 
     if isResEnough(building):
@@ -245,7 +247,7 @@ def doUpgrade(building=None):
             stoneNeed = cost['stone'] - resources['stone']
             stoneNeed = max(stoneNeed,0)
             tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
-            queues.cmdQueAdd(('build', building))
+            queues.cmdQueAdd(('build', building, repeat))
             return
         else:
             queues.queThrdsLock.acquire()
@@ -266,7 +268,10 @@ def doUpgrade(building=None):
             queues.msgQueAdd('Наверх')
             queues.queThrdsLock.release()
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
-            if AUTOBUILD: queues.cmdQueAdd(('build',))
+            if repeat: repeat -= 1
+            if AUTOBUILD:
+                if repeat: queues.cmdQueAdd(('build',building,repeat))
+                else: queues.cmdQueAdd(('build',))
     else:
         bldCost = getUpgrCost(building)
         needTotal = getResNeed(building)['total']
@@ -274,7 +279,7 @@ def doUpgrade(building=None):
         lefttime = math.ceil(needTotal / getTotalIncom())
         globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
         #Запустить таймер через расчетное время (+1 минута)
-        timer.setUpgrTimer(lefttime+1, building)
+        timer.setUpgrTimer(lefttime+1, building, repeat)
         #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
         tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
 

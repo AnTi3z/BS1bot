@@ -44,13 +44,10 @@ def cmdQueParse():
     cmd, *params = cmdQueue.get_nowait()
 
     if cmd == 'build':
-        if len(params) > 0: 
-            builder.doUpgrade(params[0])
-        else:
-            builder.doUpgrade()
+        builder.doUpgrade(*params)
     elif cmd == 'feed':
         tools.doBuyFood()
     elif cmd == 'reses':
-        tools.doTargetReses(params[0], params[1], params[2])
+        tools.doTargetReses(*params)
     elif cmd == 'ppl':
         tools.doAutoPpl()

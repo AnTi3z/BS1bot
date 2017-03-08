@@ -14,10 +14,12 @@ def cmdParser(text):
             if params[0] == 'стоп':
                 if timer.upgrTimerThread: timer.upgrTimerThread.cancel()
                 globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд остановлен.')
-            else: builder.doUpgrade(params[0])
+            else: builder.doUpgrade(*params)
         else:
             if timer.upgrTimerThread and timer.upgrTimerThread.isAlive():
-                globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд %s уже запущен. Осталось %d\U0001f553 минут.' % (timer.upgrTimerBuilding,int((timer.upgrTimerStoptime - time.time())/60)))
+                if timer.upgrTimerRepeat: txtRepeat = "(еще %d раз)" % timer.upgrTimerRepeat
+                else: txtRepeat = ""
+                globalobjs.SendInfo_cb('\U0001f4ac Таймер на апгрейд %s%s уже запущен. Осталось %d\U0001f553 минут.' % (timer.upgrTimerBuilding,txtRepeat,int((timer.upgrTimerStoptime - time.time())/60)))
             else: builder.doUpgrade()
     elif cmd == '!еда':
         if len(params) > 0:
