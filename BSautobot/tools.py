@@ -1,4 +1,5 @@
 import time
+import logging
 
 from . import globalobjs
 from .globalobjs import *
@@ -6,6 +7,8 @@ from . import queues
 from . import builder
 from . import timer
 from . import war
+
+logger = logging.getLogger(__name__)
 
 def doBuyReses(wood=0, stone=0, food=0):
     if wood == 0 and stone == 0 and food == 0: return
@@ -107,13 +110,13 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if stone > resources['stone']: timetoStone = int((stone - resources['stone'])/min(buildings['Шахта']['lvl'],buildings['Склад']['lvl']))
         else: timetoStone = 0
 
-        #print("timetoGold: %d; timetoWood: %d; timetoStone: %d" % (timetoGold, timetoWood, timetoStone))
+        logger.debug('timetoGold: %d; timetoWood: %d; timetoStone: %d',timetoGold, timetoWood, timetoStone)
 
         #Закупаемся максимум до MIN_GOLD
         moneyToSpend = resources['gold'] - MIN_GOLD
         moneyToSpend = max(moneyToSpend,0)
 
-        #print("Money to spend: %d" % moneyToSpend)
+        logger.debug('Money to spend: %d',moneyToSpend)
 
         if timetoGold < timetoWood and timetoGold < timetoStone:
             #Закупаем ресурсы пропорционально оставшемуся времени
@@ -127,11 +130,12 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
             stoneToBuy = int((moneyToSpend/2))
         else: return
 
-        #print("woodToBuy: %d; stoneToBuy: %d" % (woodToBuy, stoneToBuy))
+        logger.debug('woodToBuy: %d; stoneToBuy: %d',woodToBuy,stoneToBuy)
 
         #Проверяем что закупаем не слишком много
         if gold > MIN_GOLD:
             lastPeriod = int((gold - MIN_GOLD)/builder.getIncom('Ратуша'))
+            logger.debug('Расчетное время последней закупки: %d минут',lastPeriod)
             maxWood = wood - lastPeriod * min(buildings['Лесопилка']['lvl'],buildings['Склад']['lvl'])
             maxWood = max(maxWood,0)
             maxStone = stone - lastPeriod * min(buildings['Шахта']['lvl'],buildings['Склад']['lvl'])
@@ -142,7 +146,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         if stoneToBuy > 0 and resources['stone'] + stoneToBuy > maxStone: stoneToBuy = maxStone - resources['stone']
         stoneToBuy = max(stoneToBuy,0)
             
-        #print("maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d" % (maxWood, woodToBuy, maxStone, stoneToBuy))
+        logger.debug('maxWood: %d; woodToBuy: %d; maxStone: %d; stoneToBuy: %d',maxWood,woodToBuy,maxStone,stoneToBuy)
 
         #Закупаем
         if woodToBuy > 0 or stoneToBuy >0:

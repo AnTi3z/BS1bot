@@ -280,7 +280,10 @@ def doUpgrade(building=None, repeat=None):
                 else: queues.cmdQueAdd(('build',))
     else:
         bldCost = getUpgrCost(building)
+        logger.debug("Стоимость апгрейда: %s", str(bldCost))
         needTotal = getResNeed(building)['total']
+        logger.debug("Нехватает для апгрейда: %s", str(getResNeed(building)))
+        logger.debug("Общий доход: %d", getTotalIncom())
         #Придумать обработчик при getTotalIncom = 0
         lefttime = math.ceil(needTotal / getTotalIncom())
         globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))

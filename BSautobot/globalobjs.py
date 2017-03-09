@@ -18,4 +18,3 @@ SAVE_MONEY_TIME = 20 #в минутах
 MAX_GOLD = 750000
 MIN_GOLD = 200000
 
-debug_on = False
