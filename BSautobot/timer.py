@@ -1,5 +1,6 @@
 import time
 import threading
+import logging
 
 from . import globalobjs
 from . import builder
@@ -10,6 +11,8 @@ upgrTimerThread = None
 feedTimerThread = None
 resTimerThread = None
 pplTimerThread = None
+
+logger = logging.getLogger(__name__)
 
 def setUpgrTimer(minutes, bld, repeat=None):
     global upgrTimerThread
@@ -57,6 +60,7 @@ def setPplTimer(minutes):
 
     if pplTimerThread: pplTimerThread.cancel()
     retire = not war.imune and not war.battle #Забираем с производства людей, если нет имуна и не идет бой
+    logger.debug('Забираем людей с производства? - %s', str(retire))
     pplTimerThread = threading.Timer(minutes*60, tools.doAutoPpl, args=[retire])
     pplTimerThread.daemon = True
     pplTimerThread.start()

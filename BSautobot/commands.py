@@ -30,3 +30,5 @@ def cmdParser(text):
             if timer.feedTimerThread and timer.feedTimerThread.isAlive():
                 globalobjs.SendInfo_cb('\U0001f4ac Таймер на закупку еды уже запущен. Осталось %d\U0001f553 минут.' % int((timer.feedTimerStoptime - time.time())/60))
             else: tools.doBuyFood()
+    elif cmd == '!люди':
+        tools.doAutoPpl()
