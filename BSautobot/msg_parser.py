@@ -139,11 +139,16 @@ def msgParser(text):
     if re.search(r".Битва.+окончена.+", text):
         logger.info("Сражение окончилось!")
         war.battle = False
-        #Обновить информацию об имеющейся голде
-        #Обновить время имуна и кд через меню войны
+        #Обновить информацию об имеющейся голде и обновить время имуна и кд через меню войны
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
         queues.msgQueAdd('Война')
+        #Если защищались - починить стену
+        if war.imune:
+            queues.msgQueAdd('Наверх')
+            queues.msgQueAdd('Постройки')
+            queues.msgQueAdd('Стена')
+            queues.msgQueAdd('Чинить')
         queues.queThrdsLock.release()
         #Перезапустить апгрейд
         if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
