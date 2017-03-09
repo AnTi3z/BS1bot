@@ -239,6 +239,12 @@ def doUpgrade(building=None, repeat=None):
         queues.cmdQueAdd(('build', building, repeat))
         return
 
+    #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
+    if not isStorEnough(building):
+        logger.info("Склада недостаточно! Сначала апгрейдим склад...")
+        building = 'Склад'
+        repeat = None
+
     if isResEnough(building):
         if isResBuyingNeed(building):
             cost = getUpgrCost(building)
