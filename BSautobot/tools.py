@@ -161,6 +161,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         timer.setResTimer(expectTime,gold,wood,stone,food)
 
 def doAutoPpl(retire=True):
+    logger.debug("retire=%s",str(retire))
     #Обновить информацию о людях если требуется
     if buildings['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
@@ -168,7 +169,7 @@ def doAutoPpl(retire=True):
         queues.msgQueAdd('Постройки')
         queues.queThrdsLock.release()
         #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('ppl',))
+        queues.cmdQueAdd(('ppl',retire))
         return
 
     pplHome = buildings['Дома']['ppl']

@@ -50,4 +50,4 @@ def cmdQueParse():
     elif cmd == 'reses':
         tools.doTargetReses(*params)
     elif cmd == 'ppl':
-        tools.doAutoPpl()
+        tools.doAutoPpl(*params)
