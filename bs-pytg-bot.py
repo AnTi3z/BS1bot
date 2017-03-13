@@ -1,8 +1,8 @@
 #!/usr/local/bin/python
 
 import logging
-#from pytg.receiver import Receiver  # get messages
-#from pytg.sender import Sender  # send messages, and other querys.
+from pytg.receiver import Receiver  # get messages
+from pytg.sender import Sender  # send messages, and other querys.
 from pytg.utils import coroutine
 from pytg import Telegram
 from functools import partial
@@ -15,14 +15,14 @@ logging.basicConfig(level=logging.WARNING)
 logging.getLogger("BSautobot").setLevel(logging.DEBUG)
 
 def main():
-    tg = Telegram(telegram="/usr/local/bin/telegram-cli", pubkey_file="/usr/local/etc/telegram-cli/tg-server.pub", port=4458)
+    #tg = Telegram(telegram="/usr/local/bin/telegram-cli", pubkey_file="/usr/local/etc/telegram-cli/tg-server.pub", port=4458)
     # get a Receiver instance, to get messages.
-    #receiver = Receiver(host="localhost", port=4458)
-    receiver = tg.receiver
+    receiver = Receiver(host="localhost", port=4458)
+    #receiver = tg.receiver
 
     # get a Sender instance, to send messages, and other querys.
-    #sender = Sender(host="localhost", port=4458)
-    sender = tg.sender
+    sender = Sender(host="localhost", port=4458)
+    #sender = tg.sender
 
     # start the Receiver, so we can get messages!
     receiver.start()  # note that the Sender has no need for a start function.
@@ -33,16 +33,16 @@ def main():
     # continues here, after exiting the while loop in example_function()
 
     # please, no more messages. (we could stop the the cli too, with sender.safe_quit() )
-    sender.terminate()
-    receiver.stop()
+    #sender.terminate()
+    #receiver.stop()
     #tg.stop_cli()
 
     # the sender will disconnect after each send, so there is no need to stop it.
     # if you want to shutdown the telegram cli:
     # sender.safe_quit() # this shuts down the telegram cli.
     # sender.quit() # this shuts down the telegram cli, without waiting for downloads to complete.
-    sender.terminate()
-    receiver.stop()
+    #sender.terminate()
+    #receiver.stop()
     #tg.stop_cli()
 
     print("I am done!")
