@@ -14,6 +14,12 @@ logger = logging.getLogger(__name__)
 #парсер сообщений от бота
 def msgParser(text):
 
+    #Разведка
+    trg = re.search(r"расположился (\U0001f5e1)?(\U0001f608)?(.+) в своих владениях (.+) размером (\d+).+\nЗа победу ты получишь (-?\d+).+\n", text)
+    if trg:
+        logger.debug("trg: %s",str(trg.groups()))
+        #return
+
     #Наверх и ...-Торговля
     res = re.search(r"(?:Жители\s+(\d+).\n)?(?:Армия\s+(\d+).\n)?Золото\s+(\d+).\nДерево\s+(\d+).\nКамень\s+(\d+).\nЕда\s+(\d+).", text)
     if res:
