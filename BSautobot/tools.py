@@ -161,7 +161,6 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         timer.setResTimer(expectTime,gold,wood,stone,food)
 
 def doAutoPpl(retire=True):
-    logger.debug("retire=%s",str(retire))
     #Обновить информацию о людях если требуется
     if buildings['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
@@ -172,33 +171,56 @@ def doAutoPpl(retire=True):
         queues.cmdQueAdd(('ppl',retire))
         return
 
+    #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
     pplHome = buildings['Дома']['ppl']
-    #Сначала заполняем казармы потом стену
-    for bldRecep in ('Казармы','Стена'):
+    logger.debug('В домах всего: %d людей', pplHome)
+    if builder.getIncom('Ратуша')/builder.getMaxPpl('Дома') > 2:
+        pplHome -= builder.getMaxPpl('Дома') - buildings['Дома']['lvl']
+        pplHome = max(0,pplHome)
+        #Сколько останется в домах
+    pplHomeReserv = buildings['Дома']['ppl'] - pplHome
+    logger.debug('Забираем максимум: %d людей', pplHome)
+    #Сначала заполняем Стену, Требушет и Казармы
+    for bldRecep in ('Стена','Требушет','Казармы'):
         pplNeed = builder.getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
+        logger.debug('Войска: %s - %d/%d', bldRecep, buildings[bldRecep]['ppl'],builder.getMaxPpl(bldRecep))
         if pplNeed > 0:
-            globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска.')
+            #globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска в %s.' % bldRecep)
             #Свободными людьми
             pplSend = min(pplNeed,pplHome)
             builder.doSendPpl(bldRecep,pplSend)
             pplNeed -= pplSend
             pplHome -= pplSend
-            if retire:
+            #Если мы не в бою и не под имуном - восстанавливаем оборону за счет производств и оставшихся в домах людей
+            logger.debug('Имун: %s; Война: %s',str(war.imune),str(war.battle))
+            if not war.imune and not war.battle:
+                logger.debug('Полностью восстанавливаем оборону за счет производств')
                 #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
                 for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
-                    if pplNeed > 0:
+                    if pplNeed > 0 and buildings[bldDonor]['ppl'] > 0:
                         pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
-                        if pplSend > 0:
+                        #Если в резерве много людей, то сначла отправляем из резерва - а потом снимаем с производства
+                        if pplHomeReserv > pplSend:
+                            builder.doSendPpl(bldRecep,pplSend)
+                            builder.doRetPpl(bldDonor,pplSend)
+                        else:
                             builder.doRetPpl(bldDonor,pplSend)
                             builder.doSendPpl(bldRecep,pplSend)
-                            pplNeed -= pplSend
-                            buildings[bldDonor]['ppl'] -= pplSend
+                        pplNeed -= pplSend
+                        buildings[bldDonor]['ppl'] -= pplSend
                     else: break
+                #Если не хватило людей с производств - отправляем из домов
+                if pplNeed > 0 and pplHomeReserv > 0:
+                    logger.debug('Полностью восстанавливаем оборону из резерва %d людей из домов',pplHomeReserv)
+                    pplSend = min(pplNeed,pplHomeReserv)
+                    builder.doSendPpl(bldRecep,pplSend)
+                    pplNeed -= pplSend
+                    pplHomeReserv -= pplSend
 
-    #Отправляем людей на производства
+    #Отправляем людей на производства (Резерв в домах не трогаем)
     if pplHome > 0:
-        globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
-        for bld in ('Склад','Ферма','Шахта','Лесопилка','Требушет'):
+        #globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
+        for bld in ('Склад','Ферма','Шахта','Лесопилка'):
             pplNeed = builder.getMaxPpl(bld) - buildings[bld]['ppl']
             if pplNeed > 0:
                 pplSend = min(pplNeed,pplHome)
