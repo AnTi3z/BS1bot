@@ -71,7 +71,7 @@ def getMaxPpl(building):
     if building == 'Склад' or building == 'Лесопилка' or building == 'Шахта' or building == 'Ферма' or building == 'Стена': return buildings[building]['lvl'] * 10
     elif building == 'Дома': return buildings[building]['lvl'] * 20
     elif building == 'Казармы': return buildings[building]['lvl'] * 40
-    elif building == 'Требушет': return math.ceil(buildings[building]['lvl'] / 5)
+    elif building == 'Требушет': return int(buildings[building]['lvl'] / 5 + 1)
     else: return None
 
 
