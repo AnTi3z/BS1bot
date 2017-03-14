@@ -14,6 +14,12 @@ logger = logging.getLogger(__name__)
 #парсер сообщений от бота
 def msgParser(text):
 
+    #Разведка
+    trg = re.search(r"расположился (\U0001f5e1)?(\U0001f608)?(.+) в своих владениях (.+) размером (\d+).+\nЗа победу ты получишь (-?\d+).+\n", text)
+    if trg:
+        logger.debug("trg: %s",str(trg.groups()))
+        #return
+
     #Наверх и ...-Торговля
     res = re.search(r"(?:Жители\s+(\d+).\n)?(?:Армия\s+(\d+).\n)?Золото\s+(\d+).\nДерево\s+(\d+).\nКамень\s+(\d+).\nЕда\s+(\d+).", text)
     if res:
@@ -121,7 +127,8 @@ def msgParser(text):
     if re.search(r"Твои владения атакованы!", text):
         logger.info("Нас атаковали!")
         war.battle = True
-        war.imune = time.time() + 3600 #60 минут (TODO: 30 минут для завоевателя и плохиша)
+        war.defense = True
+        #war.imune = time.time() + 3600 #60 минут (TODO: 30 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
@@ -130,7 +137,8 @@ def msgParser(text):
     if re.search(r"Осада началась!", text):
         logger.info("Сражение началось!")
         war.battle = True
-        war.cooldown = time.time() + 600 #10 минут (TODO: 5 минут для завоевателя и плохиша)
+        war.defense = False
+        #war.cooldown = time.time() + 600 #10 минут (TODO: 5 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
@@ -144,7 +152,7 @@ def msgParser(text):
         queues.msgQueAdd('Наверх')
         queues.msgQueAdd('Война')
         #Если защищались - починить стену
-        if war.imune:
+        if war.defense:
             queues.msgQueAdd('Наверх')
             queues.msgQueAdd('Постройки')
             queues.msgQueAdd('Стена')

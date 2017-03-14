@@ -71,7 +71,7 @@ def getMaxPpl(building):
     if building == 'Склад' or building == 'Лесопилка' or building == 'Шахта' or building == 'Ферма' or building == 'Стена': return buildings[building]['lvl'] * 10
     elif building == 'Дома': return buildings[building]['lvl'] * 20
     elif building == 'Казармы': return buildings[building]['lvl'] * 40
-    elif building == 'Требушет': return math.ceil(buildings[building]['lvl'] / 5)
+    elif building == 'Требушет': return int(buildings[building]['lvl'] / 5 + 1)
     else: return None
 
 
@@ -298,16 +298,15 @@ def doSendPpl(building, ppl):
     
     queues.queThrdsLock.acquire()
     queues.msgQueAdd('Наверх')
-    if building == 'Требушет':
-        queues.msgQueAdd('Мастерская')
+    if building == 'Требушет' or building == 'Казармы' or building == 'Стена':
+        queues.msgQueAdd('Война')
+        queues.msgQueAdd('Обучить')
+        queues.msgQueAdd(building)
     else:
         queues.msgQueAdd('Постройки')
-    queues.msgQueAdd(building)
-    #Отправляем в постройку людей(добавить проверки)
-    if building == 'Казармы' or building == 'Стена': queues.msgQueAdd('Обучить')
-    else: queues.msgQueAdd('Отправить')
+        queues.msgQueAdd(building)
+        queues.msgQueAdd('Отправить')
     queues.msgQueAdd(str(ppl))
-    #queues.msgQueAdd('Наверх')
     queues.queThrdsLock.release()
     globalobjs.SendInfo_cb('\u26a0 Отправляем %d человек в %s' % (ppl,building))
 

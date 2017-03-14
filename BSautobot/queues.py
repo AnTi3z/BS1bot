@@ -33,7 +33,7 @@ def queGetNext():
 
     if not msgQueue.empty():
         time.sleep(1)
-        globalobjs.SendMsg_cb(msgQueue.get_nowait())
+        globalobjs.SendMsg_cb(msgQueue.get())
     elif not cmdQueue.empty():
         cmdQueParse()
         queGetNext()
@@ -41,7 +41,7 @@ def queGetNext():
         que_stoped = True
 
 def cmdQueParse():
-    cmd, *params = cmdQueue.get_nowait()
+    cmd, *params = cmdQueue.get()
 
     if cmd == 'build':
         builder.doUpgrade(*params)

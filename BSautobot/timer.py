@@ -59,9 +59,7 @@ def setPplTimer(minutes):
     global pplTimerStoptime
 
     if pplTimerThread: pplTimerThread.cancel()
-    retire = not war.imune and not war.battle #Забираем с производства людей, если нет имуна и не идет бой
-    logger.debug('Забираем людей с производства? - %s', str(retire))
-    pplTimerThread = threading.Timer(minutes*60, tools.doAutoPpl, args=[retire])
+    pplTimerThread = threading.Timer(minutes*60, tools.doAutoPpl)
     pplTimerThread.daemon = True
     pplTimerThread.start()
     pplTimerStoptime = time.time() + minutes*60
