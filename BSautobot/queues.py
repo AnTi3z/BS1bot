@@ -1,3 +1,4 @@
+import logging
 import threading
 import queue
 import time
@@ -5,6 +6,8 @@ import time
 from . import globalobjs
 from . import builder
 from . import tools
+
+logger = logging.getLogger(__name__)
 
 queThrdsLock = threading.Lock()
 cmdQueue = queue.Queue()
@@ -24,6 +27,7 @@ def msgQueAdd(msg):
     global que_stoped
 
     msgQueue.put(msg)
+    logger.debug('Add msg: %s', msg)
     if que_stoped:
         que_stoped = False
         queGetNext()
@@ -33,7 +37,9 @@ def queGetNext():
 
     if not msgQueue.empty():
         time.sleep(1)
-        globalobjs.SendMsg_cb(msgQueue.get())
+        msg = msgQueue.get()
+        globalobjs.SendMsg_cb(msg)
+        logger.debug('Send msg: %s', msg)
     elif not cmdQueue.empty():
         cmdQueParse()
         queGetNext()
@@ -51,3 +57,8 @@ def cmdQueParse():
         tools.doTargetReses(*params)
     elif cmd == 'ppl':
         tools.doAutoPpl(*params)
+
+def wait():
+    while not que_stoped:
+        logger.debug('queue wait...')
+        time.sleep(1)

@@ -71,7 +71,7 @@ def main_loop(sender):  # name "example_function" and given parameters are defin
             if msg.sender.peer_id == BS_ID:
                 #парсинг сообщений бота
                 BSautobot.setSendMsg(partial(sender.send_msg,msg.sender.cmd))
-                BSautobot.msgRecvd(msg.text)
+                BSautobot.msgRecvd.send(msg.text)
                 continue
     except GeneratorExit:
         # the generator (pytg) exited (got a KeyboardIterrupt).

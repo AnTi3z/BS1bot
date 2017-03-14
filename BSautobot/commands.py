@@ -1,10 +1,14 @@
 import time
+import logging
 
 from . import globalobjs
 from .globalobjs import *
 from . import builder
 from . import tools
 from . import timer
+from . import queues
+
+logger = logging.getLogger(__name__)
 
 def cmdParser(text):
     cmd, *params = text.split()
@@ -31,4 +35,23 @@ def cmdParser(text):
                 globalobjs.SendInfo_cb('\U0001f4ac Таймер на закупку еды уже запущен. Осталось %d\U0001f553 минут.' % int((timer.feedTimerStoptime - time.time())/60))
             else: tools.doBuyFood()
     elif cmd == '!люди':
-        tools.doAutoPpl()
+        tools.doAutoPpl()   
+    elif cmd == '!тест':
+        queues.queThrdsLock.acquire()
+        queues.msgQueAdd('Наверх')
+        queues.msgQueAdd('Инфо')
+        queues.msgQueAdd('Постройки')
+        queues.msgQueAdd('Стена')
+        #while not queues.que_stoped:
+        #    logger.debug('queue wait...')
+        #    time.sleep(1)
+        queues.wait()
+        logger.debug("Прочность стены 1: %d", buildings['Стена']['str'])
+        queues.msgQueAdd('Чинить')
+        queues.wait()
+        logger.debug("Прочность стены 2: %d", buildings['Стена']['str'])
+        queues.msgQueAdd('Наверх')
+        queues.msgQueAdd('Инфо')
+        queues.wait()
+        queues.queThrdsLock.release()
+        
