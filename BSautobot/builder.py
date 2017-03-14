@@ -228,16 +228,14 @@ def doUpgrade(building=None, repeat=None):
 
     #Если идет бой, откладываем таймер на 5 минут(после окончания боя таймер автоматически перезапустится)
     if war.battle:
-        timer.setUpgrTimer(5,building,repeat)
+        timer.setUpgrTimer(6,building,repeat)
         return
 
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
+        queues.wait()
         queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('build', building, repeat))
-        return
 
     #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
     if not isStorEnough(building):
@@ -271,7 +269,6 @@ def doUpgrade(building=None, repeat=None):
                 if building == 'Казармы': queues.msgQueAdd('40')
                 elif building == 'Требушет': queues.msgQueAdd('1')
                 else: queues.msgQueAdd('10')
-            queues.msgQueAdd('Наверх')
             queues.queThrdsLock.release()
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if repeat: repeat -= 1

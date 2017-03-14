@@ -48,10 +48,8 @@ def doBuyFood():
     if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
+        queues.wait()
         queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('feed',))
-        return
 
     hrsReserv = FOOD_RESERV_TIME
 
@@ -81,14 +79,11 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
     if war.battle:
         timer.setResTimer(1,gold,wood,stone,food)
         return
-    
+
+    queues.queThrdsLock.acquire()
     if resources['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
-        queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('reses',gold, wood, stone, food))
-        return
+        queues.wait()
     
     food = 0 #пока без учета еды
 
@@ -150,8 +145,17 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
         #Закупаем
         if woodToBuy > 0 or stoneToBuy >0:
-            globalobjs.SendInfo_cb('\U0001f4ac Сохраняем золото.')
-            doBuyReses(wood=woodToBuy, stone=stoneToBuy)
+            queues.msgQueAdd('Торговля')
+            queues.msgQueAdd('Купить')
+            if woodToBuy > 0:
+                queues.msgQueAdd('Дерево')
+                queues.msgQueAdd(str(wood))
+                queues.msgQueAdd('Назад')
+
+            if stoneToBuy > 0:
+                queues.msgQueAdd('Камень')
+                queues.msgQueAdd(str(stone))
+        queues.queThrdsLock.release()
 
     #Вероятно потребуются еще закупки
     if (resources['wood'] + woodToBuy) < maxWood or (resources['stone'] + stoneToBuy) < maxStone:
@@ -165,11 +169,8 @@ def doAutoPpl(retire=True):
     if buildings['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Постройки')
+        queues.wait()
         queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('ppl',retire))
-        return
 
     #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
     pplHome = buildings['Дома']['ppl']

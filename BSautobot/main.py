@@ -11,12 +11,9 @@ def setSendMsg(cb):
 def setSendInfo(cb):
     globalobjs.SendInfo_cb = cb
 
-@coroutine
 def msgRecvd():
-    while 1:
-        text = (yield)
-        msg_parser.msgParser(text)
-        queues.queGetNext()
+    msg_parser.msgParser(text)
+    queues.queGetNext()
 
 def cmdRecvd(text):
     commands.cmdParser(text)
