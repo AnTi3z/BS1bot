@@ -174,11 +174,11 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
 def doAutoPpl(retire=True):
     #Обновить информацию о людях если требуется
-    if buildings['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.wait()
-        queues.queThrdsLock.release()
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    queues.msgQueAdd('Мастерская')    
+    queues.wait()
+    queues.queThrdsLock.release()
 
     #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
     pplHome = buildings['Дома']['ppl']
