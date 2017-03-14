@@ -231,11 +231,10 @@ def doUpgrade(building=None, repeat=None):
         timer.setUpgrTimer(6,building,repeat)
         return
 
-    if resources['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.wait()
-        queues.queThrdsLock.release()
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    queues.wait()
+
 
     #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
     if not isStorEnough(building):
@@ -244,38 +243,48 @@ def doUpgrade(building=None, repeat=None):
         repeat = None
 
     if isResEnough(building):
+        #Докупаем недостающие ресурсы если надо
         if isResBuyingNeed(building):
             cost = getUpgrCost(building)
             woodNeed = cost['wood'] - resources['wood']
             woodNeed = max(woodNeed, 0)
             stoneNeed = cost['stone'] - resources['stone']
             stoneNeed = max(stoneNeed,0)
-            tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
-            queues.cmdQueAdd(('build', building, repeat))
-            return
-        else:
-            queues.queThrdsLock.acquire()
+            queues.msgQueAdd('Торговля')
+            queues.msgQueAdd('Купить')
+            if woodNeed > 0:
+                queues.msgQueAdd('Дерево')
+                queues.msgQueAdd(str(woodNeed))
+                queues.msgQueAdd('Назад')
+            if stoneNeed > 0:
+                queues.msgQueAdd('Камень')
+                queues.msgQueAdd(str(stoneNeed))
+            globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf для апгрейда %s' % (woodNeed,stoneNeed,building))
             queues.msgQueAdd('Наверх')
-            if building == 'Требушет':
-                queues.msgQueAdd('Мастерская')
-            else:
-                queues.msgQueAdd('Постройки')
-            queues.msgQueAdd(building)
-            queues.msgQueAdd('Улучшить')
-            #Отправляем в постройку людей(добавить проверки)
-            if building != 'Ратуша' and building != 'Дома':
-                if building == 'Казармы' or building == 'Стена': queues.msgQueAdd('Обучить')
-                else: queues.msgQueAdd('Отправить')
-                if building == 'Казармы': queues.msgQueAdd('40')
-                elif building == 'Требушет': queues.msgQueAdd('1')
-                else: queues.msgQueAdd('10')
-            queues.queThrdsLock.release()
-            globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
-            if repeat: repeat -= 1
-            if AUTOBUILD:
-                if repeat: queues.cmdQueAdd(('build',building,repeat))
-                else: queues.cmdQueAdd(('build',))
+            queues.wait()
+            
+        
+        if building == 'Требушет':
+            queues.msgQueAdd('Мастерская')
+        else:
+            queues.msgQueAdd('Постройки')
+        queues.msgQueAdd(building)
+        queues.msgQueAdd('Улучшить')
+        #Отправляем в постройку людей(добавить проверки)
+        if building != 'Ратуша' and building != 'Дома':
+            if building == 'Казармы' or building == 'Стена': queues.msgQueAdd('Обучить')
+            else: queues.msgQueAdd('Отправить')
+            if building == 'Казармы': queues.msgQueAdd('40')
+            elif building == 'Требушет': queues.msgQueAdd('1')
+            else: queues.msgQueAdd('10')
+        globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
+        if repeat: repeat -= 1
+        if AUTOBUILD:
+            if repeat: queues.cmdQueAdd(('build',building,repeat))
+            else: queues.cmdQueAdd(('build',))
+        queues.queThrdsLock.release()
     else:
+        queues.queThrdsLock.release()
         bldCost = getUpgrCost(building)
         logger.debug("Стоимость апгрейда: %s", str(bldCost))
         needTotal = getResNeed(building)['total']
@@ -288,6 +297,7 @@ def doUpgrade(building=None, repeat=None):
         timer.setUpgrTimer(lefttime+1, building, repeat)
         #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
         tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
+    
 
 #Отправить в здание людей
 def doSendPpl(building, ppl):
@@ -317,7 +327,7 @@ def doRetPpl(building, ppl):
     else:
         queues.msgQueAdd('Постройки')
     queues.msgQueAdd(building)
-    #Заюираем из постройки людей(добавить проверки)
+    #Забираем из постройки людей(добавить проверки)
     queues.msgQueAdd('Отозвать')
     queues.msgQueAdd(str(ppl))
     #queues.msgQueAdd('Наверх')

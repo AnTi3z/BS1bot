@@ -42,6 +42,7 @@ def queGetNext():
         logger.debug('Send msg: %s', msg)
     elif not cmdQueue.empty():
         cmdQueParse()
+        logger.debug('cmdQueParsed')
         queGetNext()
     else:
         que_stoped = True
@@ -49,14 +50,16 @@ def queGetNext():
 def cmdQueParse():
     cmd, *params = cmdQueue.get()
 
+    logger.debug('cmdQueue: cmd:%s   params:%s',cmd,str(params))
+
     if cmd == 'build':
-        builder.doUpgrade(*params)
+        threading.Thread(target=builder.doUpgrade,args=params).start()
     elif cmd == 'feed':
-        tools.doBuyFood()
+        threading.Thread(target=tools.doBuyFood).start()
     elif cmd == 'reses':
-        tools.doTargetReses(*params)
+        threading.Thread(target=tools.doTargetReses,args=params).start()
     elif cmd == 'ppl':
-        tools.doAutoPpl(*params)
+        threading.Thread(target=tools.doAutoPpl,args=params).start()
 
 def wait():
     while not que_stoped:

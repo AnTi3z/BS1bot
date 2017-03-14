@@ -1,5 +1,3 @@
-from .utils import coroutine
-
 from . import globalobjs
 from . import queues
 from . import msg_parser
@@ -11,7 +9,7 @@ def setSendMsg(cb):
 def setSendInfo(cb):
     globalobjs.SendInfo_cb = cb
 
-def msgRecvd():
+def msgRecvd(text):
     msg_parser.msgParser(text)
     queues.queGetNext()
 
