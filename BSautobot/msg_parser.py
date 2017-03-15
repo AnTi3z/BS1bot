@@ -159,7 +159,9 @@ def msgParser(text):
             queues.msgQueAdd('Чинить')
         queues.queThrdsLock.release()
         #Перезапустить апгрейд
-        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
+        if timer.upgrTimerThread:
+            timer.upgrTimerThread.cancel()
+            threading.Thread(target=builder.doUpgrade,args=(timer.upgrTimerBuilding, timer.upgrTimerRepeat)).start()
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
 

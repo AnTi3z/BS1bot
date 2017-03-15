@@ -45,13 +45,10 @@ def doBuyFood():
         timer.setFeedTimer(1)
         return
     
-    if resources['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('feed',))
-        return
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    queues.wait()
+
 
     hrsReserv = FOOD_RESERV_TIME
 
@@ -68,7 +65,14 @@ def doBuyFood():
         foodReserv = foodNeed + resources['food']
 
     #Покупка
-    doBuyReses(food=foodNeed)
+    if foodNeed > 0:
+        queues.msgQueAdd('Торговля')
+        queues.msgQueAdd('Купить')
+        queues.msgQueAdd('Еда')
+        queues.msgQueAdd(str(foodNeed))
+        globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f356' % foodNeed)
+    queues.queThrdsLock.release()
+    
 
     #Корректировка времени на которое расчитан запас еды
     if foodConsum * hrsReserv * 60 > foodReserv: hrsReserv = foodReserv / (foodConsum * 60)
@@ -81,14 +85,10 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
     if war.battle:
         timer.setResTimer(1,gold,wood,stone,food)
         return
-    
-    if resources['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('reses',gold, wood, stone, food))
-        return
+
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    queues.wait()
     
     food = 0 #пока без учета еды
 
@@ -128,7 +128,9 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         elif timetoGold < timetoStone:
             #Закупаем только камень
             stoneToBuy = int((moneyToSpend/2))
-        else: return
+        else:
+            queues.queThrdsLock.release()
+            return
 
         logger.debug('woodToBuy: %d; stoneToBuy: %d',woodToBuy,stoneToBuy)
 
@@ -150,8 +152,18 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
         #Закупаем
         if woodToBuy > 0 or stoneToBuy >0:
-            globalobjs.SendInfo_cb('\U0001f4ac Сохраняем золото.')
-            doBuyReses(wood=woodToBuy, stone=stoneToBuy)
+            queues.msgQueAdd('Торговля')
+            queues.msgQueAdd('Купить')
+            if woodToBuy > 0:
+                queues.msgQueAdd('Дерево')
+                queues.msgQueAdd(str(woodToBuy))
+                queues.msgQueAdd('Назад')
+            if stoneToBuy > 0:
+                queues.msgQueAdd('Камень')
+                queues.msgQueAdd(str(stoneToBuy))
+            globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf для сохранения' % (woodToBuy,stoneToBuy))
+                
+    queues.queThrdsLock.release()
 
     #Вероятно потребуются еще закупки
     if (resources['wood'] + woodToBuy) < maxWood or (resources['stone'] + stoneToBuy) < maxStone:
@@ -162,14 +174,11 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
 def doAutoPpl(retire=True):
     #Обновить информацию о людях если требуется
-    if buildings['time'] < int(time.time()/60):
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Постройки')
-        queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('ppl',retire))
-        return
+    queues.queThrdsLock.acquire()
+    queues.msgQueAdd('Наверх')
+    queues.msgQueAdd('Мастерская')    
+    queues.wait()
+    queues.queThrdsLock.release()
 
     #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
     pplHome = buildings['Дома']['ppl']

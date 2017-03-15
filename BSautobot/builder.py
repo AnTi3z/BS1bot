@@ -1,6 +1,7 @@
 import math
 import time
 import logging
+import threading
 
 from . import globalobjs
 from .globalobjs import *
@@ -222,42 +223,49 @@ def getNextUpgrBld():
 
 #Проапгрейдить здание
 def doUpgrade(building=None, repeat=None):
-    if not building: repeat = None
-    if repeat: repeat = int(repeat)
-    building = building or getNextUpgrBld()
+    while 1:
+        if not building: repeat = None
+        if repeat: repeat = int(repeat)
+        building = building or getNextUpgrBld()
 
-    #Если идет бой, откладываем таймер на 5 минут(после окончания боя таймер автоматически перезапустится)
-    if war.battle:
-        timer.setUpgrTimer(5,building,repeat)
-        return
+        #Если идет бой, откладываем таймер на 5 минут(после окончания боя таймер автоматически перезапустится)
+        if war.battle:
+            timer.setUpgrTimer(6,building,repeat)
+            return
 
-    if resources['time'] < int(time.time()/60):
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
-        queues.queThrdsLock.release()
-        #Запустить таймер на 5 секунд или time.sleep(5)
-        queues.cmdQueAdd(('build', building, repeat))
-        return
+        queues.wait()
 
-    #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
-    if not isStorEnough(building):
-        logger.info("Склада недостаточно! Сначала апгрейдим склад...")
-        building = 'Склад'
-        repeat = None
 
-    if isResEnough(building):
-        if isResBuyingNeed(building):
-            cost = getUpgrCost(building)
-            woodNeed = cost['wood'] - resources['wood']
-            woodNeed = max(woodNeed, 0)
-            stoneNeed = cost['stone'] - resources['stone']
-            stoneNeed = max(stoneNeed,0)
-            tools.doBuyReses(wood=woodNeed,stone=stoneNeed)
-            queues.cmdQueAdd(('build', building, repeat))
-            return
-        else:
-            queues.queThrdsLock.acquire()
-            queues.msgQueAdd('Наверх')
+        #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
+        if not isStorEnough(building):
+            logger.info("Склада недостаточно! Сначала апгрейдим склад...")
+            building = 'Склад'
+            repeat = None
+
+        if isResEnough(building):
+            #Докупаем недостающие ресурсы если надо
+            if isResBuyingNeed(building):
+                cost = getUpgrCost(building)
+                woodNeed = cost['wood'] - resources['wood']
+                woodNeed = max(woodNeed, 0)
+                stoneNeed = cost['stone'] - resources['stone']
+                stoneNeed = max(stoneNeed,0)
+                queues.msgQueAdd('Торговля')
+                queues.msgQueAdd('Купить')
+                if woodNeed > 0:
+                    queues.msgQueAdd('Дерево')
+                    queues.msgQueAdd(str(woodNeed))
+                    queues.msgQueAdd('Назад')
+                if stoneNeed > 0:
+                    queues.msgQueAdd('Камень')
+                    queues.msgQueAdd(str(stoneNeed))
+                globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf для апгрейда %s' % (woodNeed,stoneNeed,building))
+                queues.msgQueAdd('Наверх')
+                queues.wait()
+                
+            
             if building == 'Требушет':
                 queues.msgQueAdd('Мастерская')
             else:
@@ -271,26 +279,27 @@ def doUpgrade(building=None, repeat=None):
                 if building == 'Казармы': queues.msgQueAdd('40')
                 elif building == 'Требушет': queues.msgQueAdd('1')
                 else: queues.msgQueAdd('10')
-            queues.msgQueAdd('Наверх')
             queues.queThrdsLock.release()
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if repeat: repeat -= 1
-            if AUTOBUILD:
-                if repeat: queues.cmdQueAdd(('build',building,repeat))
-                else: queues.cmdQueAdd(('build',))
-    else:
-        bldCost = getUpgrCost(building)
-        logger.debug("Стоимость апгрейда: %s", str(bldCost))
-        needTotal = getResNeed(building)['total']
-        logger.debug("Нехватает для апгрейда: %s", str(getResNeed(building)))
-        logger.debug("Общий доход: %d", getTotalIncom())
-        #Придумать обработчик при getTotalIncom = 0
-        lefttime = math.ceil(needTotal / getTotalIncom())
-        globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
-        #Запустить таймер через расчетное время (+1 минута)
-        timer.setUpgrTimer(lefttime+1, building, repeat)
-        #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
-        tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
+            if not repeat: building = None
+            if not AUTOBUILD: break
+        else:
+            queues.queThrdsLock.release()
+            bldCost = getUpgrCost(building)
+            logger.debug("Стоимость апгрейда: %s", str(bldCost))
+            needTotal = getResNeed(building)['total']
+            logger.debug("Нехватает для апгрейда: %s", str(getResNeed(building)))
+            logger.debug("Общий доход: %d", getTotalIncom())
+            #Придумать обработчик при getTotalIncom = 0
+            lefttime = math.ceil(needTotal / getTotalIncom())
+            globalobjs.SendInfo_cb('\U0001f4ac Ресурсов на постройку %s недостаточно.\nНедостает %d\U0001f4b0\nДо постройки %d\U0001f553 минут.' % (building, needTotal, lefttime))
+            #Запустить таймер через расчетное время (+1 минута)
+            timer.setUpgrTimer(lefttime+1, building, repeat)
+            #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
+            threading.Thread(target=tools.doTargetReses,args=(bldCost['gold'],bldCost['wood'],bldCost['stone'])).start()
+            break
+    
 
 #Отправить в здание людей
 def doSendPpl(building, ppl):
@@ -320,9 +329,7 @@ def doRetPpl(building, ppl):
     else:
         queues.msgQueAdd('Постройки')
     queues.msgQueAdd(building)
-    #Заюираем из постройки людей(добавить проверки)
     queues.msgQueAdd('Отозвать')
     queues.msgQueAdd(str(ppl))
-    #queues.msgQueAdd('Наверх')
     queues.queThrdsLock.release()
     globalobjs.SendInfo_cb('\u26a0 Забираем %d человек из %s' % (ppl,building))
