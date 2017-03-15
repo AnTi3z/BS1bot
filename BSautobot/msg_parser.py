@@ -162,3 +162,9 @@ def msgParser(text):
         if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
+
+    #Начало дозора
+    #Окончание дозора
+    if re.search(r"\s(?:(?:Битва оказалась не долгой)|(?:Завязалась кровавая битва)).+пополнилась на (\d+).+", text, re.S):
+        #Перезапустить апгрейд
+        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
