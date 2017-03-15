@@ -169,4 +169,6 @@ def msgParser(text):
     #Окончание дозора
     if re.search(r"\s(?:(?:Битва оказалась не долгой)|(?:Завязалась кровавая битва)).+пополнилась на (\d+).+", text, re.S):
         #Перезапустить апгрейд
-        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
+        if timer.upgrTimerThread:
+            timer.upgrTimerThread.cancel()
+            threading.Thread(target=builder.doUpgrade,args=(timer.upgrTimerBuilding, timer.upgrTimerRepeat)).start()
