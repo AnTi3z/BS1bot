@@ -1,6 +1,7 @@
 import re
 import time
 import logging
+import threading
 
 from .globalobjs import *
 #from . import tools
@@ -148,16 +149,16 @@ def msgParser(text):
         logger.info("Сражение окончилось!")
         war.battle = False
         #Обновить информацию об имеющейся голде и обновить время имуна и кд через меню войны
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Война')
-        #Если защищались - починить стену
-        if war.defense:
+        with queues.queThrdsLock:
             queues.msgQueAdd('Наверх')
-            queues.msgQueAdd('Постройки')
-            queues.msgQueAdd('Стена')
-            queues.msgQueAdd('Чинить')
-        queues.queThrdsLock.release()
+            queues.msgQueAdd('Война')
+            #Если защищались - починить стену
+            if war.defense:
+                queues.msgQueAdd('Наверх')
+                queues.msgQueAdd('Постройки')
+                queues.msgQueAdd('Стена')
+                queues.msgQueAdd('Чинить')
+
         #Перезапустить апгрейд
         if timer.upgrTimerThread:
             timer.upgrTimerThread.cancel()

@@ -235,7 +235,7 @@ def doUpgrade(building=None, repeat=None):
 
         queues.queThrdsLock.acquire()
         queues.msgQueAdd('Наверх')
-        queues.wait()
+        queues.queStoped.wait()
 
 
         #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
@@ -263,8 +263,7 @@ def doUpgrade(building=None, repeat=None):
                     queues.msgQueAdd(str(stoneNeed))
                 globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf для апгрейда %s' % (woodNeed,stoneNeed,building))
                 queues.msgQueAdd('Наверх')
-                queues.wait()
-                
+                #queues.wait()
             
             if building == 'Требушет':
                 queues.msgQueAdd('Мастерская')
@@ -305,31 +304,31 @@ def doUpgrade(building=None, repeat=None):
 def doSendPpl(building, ppl):
     if ppl <= 0 or building == 'Ратуша' or building == 'Дома': return
     
-    queues.queThrdsLock.acquire()
-    queues.msgQueAdd('Наверх')
-    if building == 'Требушет' or building == 'Казармы' or building == 'Стена':
-        queues.msgQueAdd('Война')
-        queues.msgQueAdd('Обучить')
-        queues.msgQueAdd(building)
-    else:
-        queues.msgQueAdd('Постройки')
-        queues.msgQueAdd(building)
-        queues.msgQueAdd('Отправить')
-    queues.msgQueAdd(str(ppl))
-    queues.queThrdsLock.release()
+    with queues.queThrdsLock:
+        queues.msgQueAdd('Наверх')
+        if building == 'Требушет' or building == 'Казармы' or building == 'Стена':
+            queues.msgQueAdd('Война')
+            queues.msgQueAdd('Обучить')
+            queues.msgQueAdd(building)
+        else:
+            queues.msgQueAdd('Постройки')
+            queues.msgQueAdd(building)
+            queues.msgQueAdd('Отправить')
+        queues.msgQueAdd(str(ppl))
+
     globalobjs.SendInfo_cb('\u26a0 Отправляем %d человек в %s' % (ppl,building))
 
 def doRetPpl(building, ppl):
     if ppl <= 0 or building == 'Ратуша' or building == 'Дома': return
     
-    queues.queThrdsLock.acquire()
-    queues.msgQueAdd('Наверх')
-    if building == 'Требушет':
-        queues.msgQueAdd('Мастерская')
-    else:
-        queues.msgQueAdd('Постройки')
-    queues.msgQueAdd(building)
-    queues.msgQueAdd('Отозвать')
-    queues.msgQueAdd(str(ppl))
-    queues.queThrdsLock.release()
+    with queues.queThrdsLock:
+        queues.msgQueAdd('Наверх')
+        if building == 'Требушет':
+            queues.msgQueAdd('Мастерская')
+        else:
+            queues.msgQueAdd('Постройки')
+        queues.msgQueAdd(building)
+        queues.msgQueAdd('Отозвать')
+        queues.msgQueAdd(str(ppl))
+
     globalobjs.SendInfo_cb('\u26a0 Забираем %d человек из %s' % (ppl,building))
