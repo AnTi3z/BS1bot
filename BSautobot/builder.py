@@ -290,7 +290,7 @@ def doUpgrade(building=None, repeat=None):
         #Запустить таймер через расчетное время (+1 минута)
         timer.setUpgrTimer(lefttime+1, building, repeat)
         #Запустить таймер на переодическую закупку ресурсов (чтоб не копить золото)
-        tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
+        if AUTOMONEY: tools.doTargetReses(gold=bldCost['gold'],wood=bldCost['wood'],stone=bldCost['stone'])
 
 #Отправить в здание людей
 def doSendPpl(building, ppl):

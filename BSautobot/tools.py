@@ -231,5 +231,5 @@ def doAutoPpl(retire=True):
 
 
     if pplHome <= 0:
-        timer.setPplTimer(1)
+        timer.setPplTimer(2)
         #Если свободных людей 0 - запускаем таймер на 1 минуту

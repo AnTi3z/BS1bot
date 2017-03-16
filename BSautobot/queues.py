@@ -32,7 +32,7 @@ def queGetNext():
     global que_stoped
 
     if not msgQueue.empty():
-        time.sleep(1)
+        time.sleep(2)
         globalobjs.SendMsg_cb(msgQueue.get())
     elif not cmdQueue.empty():
         cmdQueParse()

@@ -13,9 +13,11 @@ SendInfo_cb = None
 
 AUTOBUILD = True
 AUTOFEED = True
+AUTOMONEY = True
+
 FOOD_RESERV_TIME = 4 #в часах
-SAVE_MONEY_TIME = 20 #в минутах
-MAX_GOLD = 750000
+SAVE_MONEY_TIME = 30 #в минутах
+MAX_GOLD = 1200000
 MIN_GOLD = 200000
 
 ICON_PPL = ''
