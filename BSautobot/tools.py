@@ -1,5 +1,6 @@
 import time
 import logging
+import threading
 
 from . import globalobjs
 from .globalobjs import *
@@ -13,7 +14,9 @@ logger = logging.getLogger(__name__)
 def doBuyReses(wood=0, stone=0, food=0):
     if wood == 0 and stone == 0 and food == 0: return
 
+    logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
     with queues.queThrdsLock:
+        logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         #Закупаем ресурсы
         queues.msgQueAdd('Наверх')
         queues.msgQueAdd('Торговля')
@@ -34,6 +37,7 @@ def doBuyReses(wood=0, stone=0, food=0):
             queues.msgQueAdd(str(food))
             queues.msgQueAdd('Назад')
 
+    logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf %d\U0001f356' % (wood,stone,food))
 
 def doBuyFood():
@@ -42,9 +46,13 @@ def doBuyFood():
         timer.setFeedTimer(1)
         return
     
+    logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
     with queues.queThrdsLock:
+        logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         queues.msgQueAdd('Наверх')
+        logger.debug('Поток: %s - wait',str(threading.current_thread()))
         queues.queStoped.wait()
+        logger.debug('Поток: %s - go',str(threading.current_thread()))
 
         hrsReserv = FOOD_RESERV_TIME
 
@@ -67,7 +75,9 @@ def doBuyFood():
             queues.msgQueAdd('Еда')
             queues.msgQueAdd(str(foodNeed))
             globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f356' % foodNeed)
+            
 
+    logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     #Корректировка времени на которое расчитан запас еды
     if foodConsum * hrsReserv * 60 > foodReserv: hrsReserv = foodReserv / (foodConsum * 60)
 
@@ -80,9 +90,13 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         timer.setResTimer(1,gold,wood,stone,food)
         return
 
+    logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
     with queues.queThrdsLock:
+        logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         queues.msgQueAdd('Наверх')
+        logger.debug('Поток: %s - wait',str(threading.current_thread()))
         queues.queStoped.wait()
+        logger.debug('Поток: %s - go',str(threading.current_thread()))
         
         food = 0 #пока без учета еды
 
@@ -124,6 +138,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
                 stoneToBuy = int((moneyToSpend/2))
             else:
                 #Ничего не закупаем
+                logger.debug('Поток: %s - queThrdsLock освобожден?',str(threading.current_thread()))
                 return
 
             logger.debug('woodToBuy: %d; stoneToBuy: %d',woodToBuy,stoneToBuy)
@@ -157,6 +172,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
                     queues.msgQueAdd(str(stoneToBuy))
                 globalobjs.SendInfo_cb('\u26a0 Закупка: %d\U0001f332 %d\u26cf для сохранения' % (woodToBuy,stoneToBuy))
 
+    logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     #Вероятно потребуются еще закупки
     if (resources['wood'] + woodToBuy) < maxWood or (resources['stone'] + stoneToBuy) < maxStone:
         expectTime = int((MAX_GOLD - (resources['gold'] - woodToBuy*2 - stoneToBuy*2))/builder.getIncom('Ратуша')) + 1
@@ -166,70 +182,76 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
 
 def doAutoPpl(retire=True):
     #Обновить информацию о людях если требуется
+    logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
     with queues.queThrdsLock:
+        logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Мастерская')    
+        queues.msgQueAdd('Мастерская')
+        logger.debug('Поток: %s - wait',str(threading.current_thread()))
         queues.queStoped.wait()
+        logger.debug('Поток: %s - go',str(threading.current_thread()))
 
-    #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
-    pplHome = buildings['Дома']['ppl']
-    logger.debug('В домах всего: %d людей', pplHome)
-    if builder.getIncom('Ратуша')/builder.getMaxPpl('Дома') > 2:
-        pplHome -= builder.getMaxPpl('Дома') - buildings['Дома']['lvl']
-        pplHome = max(0,pplHome)
-        #Сколько останется в домах
-    pplHomeReserv = buildings['Дома']['ppl'] - pplHome
-    logger.debug('Забираем максимум: %d людей', pplHome)
-    #Сначала заполняем Стену, Требушет и Казармы
-    for bldRecep in ('Стена','Требушет','Казармы'):
-        pplNeed = builder.getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
-        logger.debug('Войска: %s - %d/%d', bldRecep, buildings[bldRecep]['ppl'],builder.getMaxPpl(bldRecep))
-        if pplNeed > 0:
-            #globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска в %s.' % bldRecep)
-            #Свободными людьми
-            pplSend = min(pplNeed,pplHome)
-            builder.doSendPpl(bldRecep,pplSend)
-            pplNeed -= pplSend
-            pplHome -= pplSend
-            #Если мы не в бою и не под имуном - восстанавливаем оборону за счет производств и оставшихся в домах людей
-            logger.debug('Имун: %s; Война: %s',str(war.imune),str(war.battle))
-            if not war.imune and not war.battle:
-                logger.debug('Полностью восстанавливаем оборону за счет производств')
-                #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
-                for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
-                    if pplNeed > 0 and buildings[bldDonor]['ppl'] > 0:
-                        pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
-                        #Если в резерве много людей, то сначла отправляем из резерва - а потом снимаем с производства
-                        if pplHomeReserv > pplSend:
-                            builder.doSendPpl(bldRecep,pplSend)
-                            builder.doRetPpl(bldDonor,pplSend)
-                        else:
-                            builder.doRetPpl(bldDonor,pplSend)
-                            builder.doSendPpl(bldRecep,pplSend)
-                        pplNeed -= pplSend
-                        buildings[bldDonor]['ppl'] -= pplSend
-                    else: break
-                #Если не хватило людей с производств - отправляем из домов
-                if pplNeed > 0 and pplHomeReserv > 0:
-                    logger.debug('Полностью восстанавливаем оборону из резерва %d людей из домов',pplHomeReserv)
-                    pplSend = min(pplNeed,pplHomeReserv)
-                    builder.doSendPpl(bldRecep,pplSend)
-                    pplNeed -= pplSend
-                    pplHomeReserv -= pplSend
-
-    #Отправляем людей на производства (Резерв в домах не трогаем)
-    if pplHome > 0:
-        #globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
-        for bld in ('Склад','Ферма','Шахта','Лесопилка'):
-            pplNeed = builder.getMaxPpl(bld) - buildings[bld]['ppl']
+        #Если доход с человека больше 2, то оставляем в домах не меньше чем макс.население минус прирост в минуту
+        pplHome = buildings['Дома']['ppl']
+        logger.debug('В домах всего: %d людей', pplHome)
+        if builder.getIncom('Ратуша')/builder.getMaxPpl('Дома') > 2:
+            pplHome -= builder.getMaxPpl('Дома') - buildings['Дома']['lvl']
+            pplHome = max(0,pplHome)
+            #Сколько останется в домах
+        pplHomeReserv = buildings['Дома']['ppl'] - pplHome
+        logger.debug('Забираем максимум: %d людей', pplHome)
+        #Сначала заполняем Стену, Требушет и Казармы
+        for bldRecep in ('Стена','Требушет','Казармы'):
+            pplNeed = builder.getMaxPpl(bldRecep) - buildings[bldRecep]['ppl']
+            logger.debug('Войска: %s - %d/%d', bldRecep, buildings[bldRecep]['ppl'],builder.getMaxPpl(bldRecep))
             if pplNeed > 0:
+                #globalobjs.SendInfo_cb('\U0001f4ac Пополняем войска в %s.' % bldRecep)
+                #Свободными людьми
                 pplSend = min(pplNeed,pplHome)
-                builder.doSendPpl(bld,pplSend)
+                builder.doSendPpl(bldRecep,pplSend)
                 pplNeed -= pplSend
                 pplHome -= pplSend
-                if pplHome <= 0: break
+                #Если мы не в бою и не под имуном - восстанавливаем оборону за счет производств и оставшихся в домах людей
+                logger.debug('Имун: %s; Война: %s',str(war.imune),str(war.battle))
+                if not war.imune and not war.battle:
+                    logger.debug('Полностью восстанавливаем оборону за счет производств')
+                    #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
+                    for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
+                        if pplNeed > 0 and buildings[bldDonor]['ppl'] > 0:
+                            pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
+                            #Если в резерве много людей, то сначла отправляем из резерва - а потом снимаем с производства
+                            if pplHomeReserv > pplSend:
+                                builder.doSendPpl(bldRecep,pplSend)
+                                builder.doRetPpl(bldDonor,pplSend)
+                            else:
+                                builder.doRetPpl(bldDonor,pplSend)
+                                builder.doSendPpl(bldRecep,pplSend)
+                            pplNeed -= pplSend
+                            buildings[bldDonor]['ppl'] -= pplSend
+                        else:
+                            logger.debug('Поток: %s - queThrdsLock освобожден?',str(threading.current_thread()))
+                            return
+                    #Если не хватило людей с производств - отправляем из домов
+                    if pplNeed > 0 and pplHomeReserv > 0:
+                        logger.debug('Полностью восстанавливаем оборону из резерва %d людей из домов',pplHomeReserv)
+                        pplSend = min(pplNeed,pplHomeReserv)
+                        builder.doSendPpl(bldRecep,pplSend)
+                        pplNeed -= pplSend
+                        pplHomeReserv -= pplSend
 
+        #Отправляем людей на производства (Резерв в домах не трогаем)
+        if pplHome > 0:
+            #globalobjs.SendInfo_cb('\U0001f4ac Отправляем людей на производство.')
+            for bld in ('Склад','Ферма','Шахта','Лесопилка'):
+                pplNeed = builder.getMaxPpl(bld) - buildings[bld]['ppl']
+                if pplNeed > 0:
+                    pplSend = min(pplNeed,pplHome)
+                    builder.doSendPpl(bld,pplSend)
+                    pplNeed -= pplSend
+                    pplHome -= pplSend
+                    if pplHome <= 0: break
 
+    logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     if pplHome <= 0:
         timer.setPplTimer(1)
         #Если свободных людей 0 - запускаем таймер на 1 минуту

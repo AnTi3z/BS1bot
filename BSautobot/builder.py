@@ -233,9 +233,13 @@ def doUpgrade(building=None, repeat=None):
             timer.setUpgrTimer(6,building,repeat)
             return
 
+        logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
         queues.queThrdsLock.acquire()
+        logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         queues.msgQueAdd('Наверх')
+        logger.debug('Поток: %s - wait',str(threading.current_thread()))
         queues.queStoped.wait()
+        logger.debug('Поток: %s - go',str(threading.current_thread()))
 
 
         #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
@@ -279,12 +283,14 @@ def doUpgrade(building=None, repeat=None):
                 elif building == 'Требушет': queues.msgQueAdd('1')
                 else: queues.msgQueAdd('10')
             queues.queThrdsLock.release()
+            logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
             if repeat: repeat -= 1
             if not repeat: building = None
             if not AUTOBUILD: break
         else:
             queues.queThrdsLock.release()
+            logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
             bldCost = getUpgrCost(building)
             logger.debug("Стоимость апгрейда: %s", str(bldCost))
             needTotal = getResNeed(building)['total']
