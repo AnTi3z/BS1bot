@@ -15,13 +15,17 @@ msgQueue = queue.Queue()
 
 
 def msgQueAdd(msg):
-    msgQueue.put(msg)
-    logger.debug('Add msg: %s', msg)
+    #Если очередь остановлена отправляем сообщение боту и запускаем очередь
     if queStoped.isSet():
         queStoped.clear()
         logger.debug('queStoped False (Locked)')
-        queGetNext()
-
+        globalobjs.SendMsg_cb(msg)
+        logger.debug('Sent msg: %s', msg)
+    #Иначе добавляем сообщение в очередь
+    else:
+        msgQueue.put(msg)
+        logger.debug('Add msg: %s', msg)
+                     
 def queGetNext():
     if not msgQueue.empty():
         logger.debug('Достаем из очереди следующую команду...')

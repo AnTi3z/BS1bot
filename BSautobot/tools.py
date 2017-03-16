@@ -186,7 +186,7 @@ def doAutoPpl(retire=True):
     with queues.queThrdsLock:
         logger.debug('Поток: %s - queThrdsLock захвачен',str(threading.current_thread()))
         queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Мастерская')
+        queues.msgQueAdd('Постройки')
         logger.debug('Поток: %s - wait',str(threading.current_thread()))
         queues.queStoped.wait()
         logger.debug('Поток: %s - go',str(threading.current_thread()))
