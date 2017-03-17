@@ -1,6 +1,7 @@
 import re
 import time
 import logging
+import threading
 
 from .globalobjs import *
 #from . import tools
@@ -148,17 +149,27 @@ def msgParser(text):
         logger.info("Сражение окончилось!")
         war.battle = False
         #Обновить информацию об имеющейся голде и обновить время имуна и кд через меню войны
-        queues.queThrdsLock.acquire()
-        queues.msgQueAdd('Наверх')
-        queues.msgQueAdd('Война')
-        #Если защищались - починить стену
-        if war.defense:
+        with queues.queThrdsLock:
             queues.msgQueAdd('Наверх')
-            queues.msgQueAdd('Постройки')
-            queues.msgQueAdd('Стена')
-            queues.msgQueAdd('Чинить')
-        queues.queThrdsLock.release()
+            queues.msgQueAdd('Война')
+            #Если защищались - починить стену
+            if war.defense:
+                queues.msgQueAdd('Наверх')
+                queues.msgQueAdd('Постройки')
+                queues.msgQueAdd('Стена')
+                queues.msgQueAdd('Чинить')
+
         #Перезапустить апгрейд
-        if timer.upgrTimerThread: queues.cmdQueAdd(('build', timer.upgrTimerBuilding, timer.upgrTimerRepeat))
+        if timer.upgrTimerThread:
+            timer.upgrTimerThread.cancel()
+            threading.Thread(target=builder.doUpgrade,args=(timer.upgrTimerBuilding, timer.upgrTimerRepeat)).start()
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return
+
+    #Начало дозора
+    #Окончание дозора
+    if re.search(r"\s(?:(?:Битва оказалась не долгой)|(?:Завязалась кровавая битва)).+пополнилась на (\d+).+", text, re.S):
+        #Перезапустить апгрейд
+        if timer.upgrTimerThread:
+            timer.upgrTimerThread.cancel()
+            threading.Thread(target=builder.doUpgrade,args=(timer.upgrTimerBuilding, timer.upgrTimerRepeat)).start()

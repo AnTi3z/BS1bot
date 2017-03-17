@@ -11,7 +11,7 @@ import BSautobot
 
 BS_ID = 252148344
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.WARNING,format='[%(asctime)s.%(msecs)d] %(levelname)s:%(name)s:%(funcName)s [lineno %(lineno)d] %(message)s',datefmt='%H:%M:%S')
 logging.getLogger("BSautobot").setLevel(logging.DEBUG)
 
 def main():
