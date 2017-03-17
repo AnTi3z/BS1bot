@@ -181,6 +181,7 @@ def doTargetReses(gold=0, wood=0, stone=0, food=0):
         timer.setResTimer(expectTime,gold,wood,stone,food)
 
 def doAutoPpl(retire=True):
+    timing = 2
     #Обновить информацию о людях если требуется
     logger.debug('Поток: %s - Ждем освобождения queThrdsLock...',str(threading.current_thread()))
     with queues.queThrdsLock:
@@ -195,7 +196,7 @@ def doAutoPpl(retire=True):
         pplHome = buildings['Дома']['ppl']
         logger.debug('В домах всего: %d людей', pplHome)
         if builder.getIncom('Ратуша')/builder.getMaxPpl('Дома') > 2:
-            pplHome -= builder.getMaxPpl('Дома') - buildings['Дома']['lvl']
+            pplHome -= builder.getMaxPpl('Дома') - buildings['Дома']['lvl']*timing
             pplHome = max(0,pplHome)
             #Сколько останется в домах
         pplHomeReserv = buildings['Дома']['ppl'] - pplHome
@@ -217,6 +218,7 @@ def doAutoPpl(retire=True):
                     logger.debug('Полностью восстанавливаем оборону за счет производств')
                     #Если не хватает людей снимаем из: Лесопилка,Шахта,Ферма,Склад
                     for bldDonor in ('Лесопилка','Шахта','Ферма','Склад'):
+                        logger.debug('bldDonor: %s; pplNeed: %d; buildings[bldDonor]["ppl"]: %d',bldDonor,pplNeed,buildings[bldDonor]["ppl"])
                         if pplNeed > 0 and buildings[bldDonor]['ppl'] > 0:
                             pplSend = min(pplNeed,buildings[bldDonor]['ppl'])
                             #Если в резерве много людей, то сначла отправляем из резерва - а потом снимаем с производства
@@ -228,9 +230,7 @@ def doAutoPpl(retire=True):
                                 builder.doSendPpl(bldRecep,pplSend)
                             pplNeed -= pplSend
                             buildings[bldDonor]['ppl'] -= pplSend
-                        else:
-                            logger.debug('Поток: %s - queThrdsLock освобожден?',str(threading.current_thread()))
-                            return
+                        #else: break
                     #Если не хватило людей с производств - отправляем из домов
                     if pplNeed > 0 and pplHomeReserv > 0:
                         logger.debug('Полностью восстанавливаем оборону из резерва %d людей из домов',pplHomeReserv)
@@ -253,5 +253,5 @@ def doAutoPpl(retire=True):
 
     logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     if pplHome <= 0:
-        timer.setPplTimer(2)
+        timer.setPplTimer(timing)
         #Если свободных людей 0 - запускаем таймер на 1 минуту
