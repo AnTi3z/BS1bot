@@ -241,10 +241,11 @@ def doUpgrade(building=None, repeat=None):
         queues.queStoped.wait()
         logger.debug('Поток: %s - go',str(threading.current_thread()))
 
-
+        
         #Если не хватает склада для ресурсов, то сначала апгрейдим склад и прерываем повторный апгрейд
         if not isStorEnough(building):
             logger.info("Склада недостаточно! Сначала апгрейдим склад...")
+            globalobjs.SendInfo_cb('Склада для %s недостаточно! Сначала апгрейдим склад...' % building)
             building = 'Склад'
             repeat = None
 
@@ -282,6 +283,9 @@ def doUpgrade(building=None, repeat=None):
                 if building == 'Казармы': queues.msgQueAdd('40')
                 elif building == 'Требушет': queues.msgQueAdd('1')
                 else: queues.msgQueAdd('10')
+            logger.debug('Поток: %s - wait',str(threading.current_thread()))
+            queues.queStoped.wait()
+            logger.debug('Поток: %s - go',str(threading.current_thread()))
             queues.queThrdsLock.release()
             logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
             globalobjs.SendInfo_cb('\u26a0 Апгрейд здания: %s' % building)
