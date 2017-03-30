@@ -85,8 +85,8 @@ def doBuyFood():
     if AUTOFEED: timer.setFeedTimer(int(hrsReserv*60/2))
 
 def doTargetReses(gold=0, wood=0, stone=0, food=0):
-    #Если идет бой, откладываем таймер на 1 минуту
-    if war.battle:
+    #Если идет бой в обороне, откладываем таймер на 1 минуту
+    if war.battle and war.defense:
         timer.setResTimer(1,gold,wood,stone,food)
         return
 
