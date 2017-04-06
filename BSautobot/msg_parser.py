@@ -29,16 +29,10 @@ def msgParser(text):
         resources['food'] = int(res.group(6))
         resources['time'] = int(time.time()/60)
         logger.debug("res: %s",str(res.groups()))
-        if trg: logger.debug("trg: %s",str(trg.groups()))
         return True
 
-    #Отдельное сообщение о разведке
-    if trg:
-        logger.debug("trg: %s",str(trg.groups()))
-        return False
-
     #...-Постройки
-    blds = re.search(r"^Постройки\n\n(?:\U0001f3e4\s+(\d+).+\n)?(?:\U0001f3da\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f3d8\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f33b\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f332\s+(\d+).+\s+(\d+)/.+\n)?(?:\u26cf\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f6e1\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f3f0\s+(\d+).+\s+(\d+)/.+\n)?\nЧто будем строить\?$", text)
+    blds = re.search(r"^Постройки\n\n(?:\U0001f3e4\s+(\d+).+\n)?(?:\U0001f3da\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f3d8\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f33b\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f332\s+(\d+).+\s+(\d+)/.+\n)?(?:\u26cf\s+(\d+).+\s+(\d+)/.+\n)?(?:\U0001f6e1\s+(\d+).+?\s*(\d+)/.+\n)?(?:\U0001f3f0\s+(\d+).+\s+(\d+)/.+\n)?\nЧто будем строить\?$", text)
     if blds:
         if blds.group(1): buildings['Ратуша']['lvl'] = int(blds.group(1))
         if blds.group(2): buildings['Склад']['lvl'] = int(blds.group(2)); buildings['Склад']['ppl'] = int(blds.group(3))
@@ -108,7 +102,13 @@ def msgParser(text):
         else: war.imune = None
         war.battle = not (batl.group(9) == None)
         logger.debug("batl: %s",str(batl.groups()))
+        if trg: logger.debug("trg: %s",str(trg.groups()))
         return True
+
+    #Отдельное сообщение о разведке
+    if trg:
+        logger.debug("trg: %s",str(trg.groups()))
+        return False
 
     #...-Война-Обучить
     army = re.search(r"^.Инфо\s+\n\n(?:.Казармы\s+(\d+).+\n?)?(?:.Стена\s+(\d+).+\n?)?(?:.Требушет\s+(\d+).+)?", text)
