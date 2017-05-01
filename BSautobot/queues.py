@@ -19,6 +19,7 @@ def msgQueAdd(msg):
     if queStoped.isSet():
         queStoped.clear()
         logger.debug('queStoped False (Locked)')
+        time.sleep(1)
         globalobjs.SendMsg_cb(msg)
         logger.debug('Sent msg: %s', msg)
     #Иначе добавляем сообщение в очередь

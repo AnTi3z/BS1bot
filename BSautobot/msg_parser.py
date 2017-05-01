@@ -17,6 +17,12 @@ def msgParser(text):
 
     #Разведка
     trg = re.search(r"расположился (\U0001f5e1)?(\U0001f608)?(.+) в своих владениях (.+) размером (\d+).+\nЗа победу ты получишь (-?\d+).+\n", text)
+    if trg:
+        if trg.group(3): war.target['name'] = trg.group(3)
+        if trg.group(5): war.target['land'] = trg.group(5)
+        if trg.group(6): war.target['karma'] = trg.group(6)
+        logger.debug("trg: %s",str(trg.groups()))
+        
 
     #Наверх и ...-Торговля
     res = re.search(r"(?:Жители\s+(\d+).\n)?(?:Армия\s+(\d+).\n)?Золото\s+(\d+).\nДерево\s+(\d+).\nКамень\s+(\d+).\nЕда\s+(\d+).", text)
@@ -102,13 +108,10 @@ def msgParser(text):
         else: war.imune = None
         war.battle = not (batl.group(9) == None)
         logger.debug("batl: %s",str(batl.groups()))
-        if trg: logger.debug("trg: %s",str(trg.groups()))
         return True
 
     #Отдельное сообщение о разведке
-    if trg:
-        logger.debug("trg: %s",str(trg.groups()))
-        return False
+    if trg: return True
 
     #...-Война-Обучить
     army = re.search(r"^.Инфо\s+\n\n(?:.Казармы\s+(\d+).+\n?)?(?:.Стена\s+(\d+).+\n?)?(?:.Требушет\s+(\d+).+)?", text)

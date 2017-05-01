@@ -8,6 +8,7 @@ from . import builder
 from . import tools
 from . import timer
 from . import queues
+from . import war
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +41,9 @@ def cmdParser(text):
                 threading.Thread(target=tools.doBuyFood).start()
     elif cmd == '!люди':
         threading.Thread(target=tools.doAutoPpl).start()
+    elif cmd == '!поиск':
+        if len(params) > 0:
+            if params[0] == 'стоп': war.searching = False
+            else:
+                war.searching = True
+                threading.Thread(target=war.findTarget,kwargs={'name': params[0]}).start()
