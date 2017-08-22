@@ -86,7 +86,7 @@ def doBuyFood():
 
 def doTargetReses(gold=0, wood=0, stone=0, food=0):
     #Если идет бой в обороне, откладываем таймер на 1 минуту
-    if war.battle and war.defense:
+    if war.battle: # and not war.imune:
         timer.setResTimer(1,gold,wood,stone,food)
         return
 
@@ -253,5 +253,5 @@ def doAutoPpl(retire=True):
 
     logger.debug('Поток: %s - queThrdsLock освобожден',str(threading.current_thread()))
     if pplHome <= 0:
-        timer.setPplTimer(timing)
+        if AUTOPPL: timer.setPplTimer(timing)
         #Если свободных людей 0 - запускаем таймер на 1 минуту
