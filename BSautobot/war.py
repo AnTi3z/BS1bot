@@ -16,6 +16,7 @@ defense = False
 target = {}
 searching = False
 
+
 def endBattle():
     battle = False
     target = {}
@@ -37,6 +38,7 @@ def endBattle():
         threading.Thread(target=builder.doUpgrade,args=(timer.upgrTimerBuilding, timer.upgrTimerRepeat)).start()
     logger.debug('war.battle=%s; war.imune=%s; war.cooldown=%s',str(battle),str(imune),str(cooldown))
 
+
 def findTarget(name=None, karma=2, land=10000, srch_all=False):
     logger.debug('Start searching: name=%s, karma=%d, land=%d, srch_all=%s',name,karma,land,str(srch_all))
     if srch_all: srch_cmd = 'Всех'
@@ -56,6 +58,7 @@ def findTarget(name=None, karma=2, land=10000, srch_all=False):
                 queues.queStoped.wait()
     globalobjs.SendInfo_cb('\u26a0 Поиск цели завершен. Цель: %s' % target['name'])
     logger.debug('Searching complete: Target=%s',str(target))
+
 
 def farm(name=None):
     #Атакуем, только если все люди на месте
