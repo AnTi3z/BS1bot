@@ -1,5 +1,5 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 menu=nx.DiGraph()
 menu.add_node('ROOT')
@@ -19,13 +19,13 @@ for nd in lst:
     menu.add_edge(nd,'Постройки', cmd='Назад')
     menu.add_edge(nd,'ROOT', cmd='Наверх')
 
-#Мастерская->
+#Корень->Мастерская->
 menu.add_node('Требушет')
-menu.add_edge('Постройки','Требушет', cmd='Требушет')
-menu.add_edge('Требушет','Постройки', cmd='Назад')
+menu.add_edge('Мастерская','Требушет', cmd='Требушет')
+menu.add_edge('Требушет','Мастерская', cmd='Назад')
 menu.add_edge('Требушет','ROOT', cmd='Наверх')
 
-#Война
+#Корень->Война->
 
 #Корень->Торговля->
 menu.add_node('РесурсКупить')
@@ -57,6 +57,13 @@ menu.add_edge('РесурсПродать','ПродатьЕда', cmd='Еда')
 for u in ('ПродатьДерево','ПродатьКамень','ПродатьЕда'):
     menu.add_edge(u,'ROOT', cmd='Наверх')
     menu.add_edge(u,'РесурсПродать', cmd='Назад')
+
+def getCmdList(src, dst):
+    path = nx.shortest_path(menu,src,dst)
+    cmd_list = []
+    for n in range(len(path)-1):
+        cmd_list.append(menu.get_edge_data(path[n],path[n+1])['cmd'])
+    return cmd_list
 
 #nx.draw(menu)
 #plt.show()
