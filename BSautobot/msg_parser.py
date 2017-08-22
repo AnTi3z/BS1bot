@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def msgParser(text):
 
     #Разведка
-    trg = re.search(r"расположился (\U0001f5e1)?(\U0001f608)?(?:\[(.{1,2})\])?(.+) в своих владениях (.+) размером (\d+).+\nЗа победу ты получишь (-?\d+).+\n", text)
+    trg = re.search(r"расположился (\U0001f5e1)?(\U0001f608)?(?:\[(.{1,2})\])?(.+) в своих владениях (.+) размером (\d+).+За победу ты получишь (-?\d+).+", text)
     if trg:
         if trg.group(4): war.target['name'] = trg.group(4)
         if trg.group(6): war.target['land'] = trg.group(6)
@@ -94,7 +94,7 @@ def msgParser(text):
         return True
 
     #...-Война
-    batl = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.Стена\s+\nПрочность\s+(\d+).+?\nЛучники\s+(\d+)\S+\n\n)?(?:.Требушет\s+\nРабочие\s+(\d+)\S+\n\n)?.+?Армия\s+(\d+).+Еда\s+(\d+)\S+?\n?(?:\nСледующая атака - (\d+)\sмин.)?(?:\nСл. атака альянсом - (\d+)\sмин.)?(?:\nБез нападений - (\d+)\sмин.)?(\nПрод)?.*", text, re.S)
+    batl = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.+Стена\s+(\d+).+?\n\s+(\d+)\S+\n\n)?(?:.+Требушет\s+(\d+)\S+\n\n)?.+\s+(\d+).+\s+(\d+)\S+\n?(?:\nСледующая атака - (\d+)\sмин.)?(?:\nСл. атака альянсом - (\d+)\sмин.)?(?:\nБез нападений - (\d+)\sмин.)?(\nПрод)?.*", text, re.S)
     if batl:
         if batl.group(1): pass #Карма
         if batl.group(2): buildings['Стена']['str'] = int(batl.group(2))
@@ -104,7 +104,7 @@ def msgParser(text):
         resources['food'] = int(batl.group(6))
         if batl.group(7): war.cooldown = time.time() + 60*int(batl.group(7))
         else: war.cooldown = None
-        if batl.group(9): war.imune = time.time() + 60*int(batl.group(8))
+        if batl.group(9): war.imune = time.time() + 60*int(batl.group(9))
         else: war.imune = None
         war.battle = not (batl.group(10) == None)
         logger.debug("batl: %s",str(batl.groups()))
