@@ -69,11 +69,14 @@ def getUpgrCost(building, lvlsUp=1):
 
 #Максимальное количество людей в строении
 def getMaxPpl(building):
-    if building == 'Склад' or building == 'Лесопилка' or building == 'Шахта' or building == 'Ферма' or building == 'Стена': return buildings[building]['lvl'] * 10
-    elif building == 'Дома': return buildings[building]['lvl'] * 20
-    elif building == 'Казармы': return buildings[building]['lvl'] * 40
-    elif building == 'Требушет': return int(buildings[building]['lvl'] / 5 + 1)
-    else: return None
+    if building in ('Склад', 'Лесопилка', 'Шахта', 'Ферма', 'Стена'):
+        return buildings[building]['lvl'] * 10
+    elif building == 'Дома':
+        return buildings[building]['lvl'] * 20
+    elif building == 'Казармы':
+        return buildings[building]['lvl'] * 40
+    elif building == 'Требушет':
+        return min(buildings[building]['lvl'] // 5 + 1, 20)
 
 
 #окупаемость
@@ -312,11 +315,12 @@ def doUpgrade(building=None, repeat=None):
 
 #Отправить в здание людей
 def doSendPpl(building, ppl):
-    if ppl <= 0 or building == 'Ратуша' or building == 'Дома': return
+    if ppl <= 0 or building in ('Ратуша', 'Дома'):
+        return
     
     with queues.queThrdsLock:
         queues.msgQueAdd('Наверх')
-        if building == 'Требушет' or building == 'Казармы' or building == 'Стена':
+        if building in ('Требушет', 'Казармы', 'Стена'):
             queues.msgQueAdd('Война')
             queues.msgQueAdd('Обучить')
             queues.msgQueAdd(building)

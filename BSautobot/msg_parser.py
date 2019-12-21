@@ -4,11 +4,11 @@ import logging
 import threading
 
 from .globalobjs import *
-#from . import tools
+from . import tools
 from . import timer
 from . import builder
 from . import war
-from . import queues
+#from . import queues
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ def msgParser(text):
         return True
 
     #...-Война
-    batl = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.+Стена\s+(\d+).+?\n\s+(\d+)\S+\n\n)?(?:.+Требушет\s+(\d+)\S+\n\n)?.+\s+(\d+).+\s+(\d+)\S+\n?(?:\nСледующая атака - (\d+)\sмин.)?(?:\nСл. атака альянсом - (\d+)\sмин.)?(?:\nБез нападений - (\d+)\sмин.)?(\nПрод)?.*", text, re.S)
+    batl = re.search(r"^Победы\s+\d+.\n(?:Карма\s+(\d+))?.+?\n\n(?:.+Стена\s+(\d+).+?\n\s+(\d+)\S+\n\n)?(?:.+Требушет\s+(\d+)\S+\n\n)?.+?\s+(\d+).+?\s+(\d+)\S+\n?(?:\nСледующая атака - (\d+)\sмин.)?(?:\nСл. атака альянсом - (\d+)\sмин.)?(?:\nБез нападений - (\d+)\sмин.)?(\nПрод)?.*", text, re.S)
     if batl:
         if batl.group(1): pass #Карма
         if batl.group(2): buildings['Стена']['str'] = int(batl.group(2))
@@ -106,7 +106,7 @@ def msgParser(text):
         else: war.cooldown = None
         if batl.group(9): war.imune = time.time() + 60*int(batl.group(9))
         else: war.imune = None
-        war.battle = not (batl.group(10) == None)
+        war.battle = not (batl.group(10) is None)
         logger.debug("batl: %s",str(batl.groups()))
         return True
 
@@ -135,7 +135,7 @@ def msgParser(text):
         logger.info("Нас атаковали!")
         war.battle = True
         war.defense = True
-        #war.imune = time.time() + 3600 #60 минут (TODO: 30 минут для завоевателя и плохиша)
+        # war.imune = time.time() + 3600 # 60 минут (TODO: 30 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return False
@@ -145,10 +145,24 @@ def msgParser(text):
         logger.info("Сражение началось!")
         war.battle = True
         war.defense = False
-        #war.cooldown = time.time() + 600 #10 минут (TODO: 5 минут для завоевателя и плохиша)
+        # war.cooldown = time.time() + 600 # 10 минут (TODO: 5 минут для завоевателя и плохиша)
         timer.setPplTimer(1)
         logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
         return True
+
+    # Альянсовый бой
+    ally_btl = re.search(r"🕊(.+)Твоя армия присоединилась к атаке.", text)
+    if ally_btl:
+        war.battle = True
+        if ally_btl.group(1) == '🛡':  #Присоединились к обороне
+            logger.info("Присоединились к альянсовой обороне!")
+            war.defense = True
+        else:  # Присоединились к атаке
+            logger.info("Присоединились к альянсовой атаке!")
+            war.defense = False
+        timer.setPplTimer(1)
+        logger.debug("war.battle=%s; war.imune=%s; war.cooldown=%s",str(war.battle),str(war.imune),str(war.cooldown))
+        return False
 
     #Окончание сражения
     if re.search(r"Битва с (.+) окончена.+", text, re.S):
@@ -157,8 +171,18 @@ def msgParser(text):
         return False
 
     #Начало дозора
+    if re.search(r"Дозорные отправились в путь.", text, re.S):
+        logger.debug("Начало дозора!")
+        # Восстанавливаем людей в казармы
+        if AUTOPPL:
+            if timer.pplTimerThread:
+                timer.pplTimerThread.cancel()
+            threading.Thread(target=tools.doAutoPpl).start()
+
+
     #Окончание дозора
     if re.search(r"\s(?:(?:Битва оказалась не долгой)|(?:Завязалась кровавая битва)).+пополнилась на (\d+).+", text, re.S):
+        logger.debug("Возвращение из дозора.")
         #Перезапустить апгрейд
         if timer.upgrTimerThread:
             timer.upgrTimerThread.cancel()
